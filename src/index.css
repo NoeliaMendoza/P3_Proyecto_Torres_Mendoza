@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #F2F4EF;
+    --bg-surface: #FFFFFF;
+    --bg-dark-surface: #162E2B;
+    --bg-dark-card: #1C3834;
+    --espe-teal: #264743;
+    --espe-green: #008345;
+    --espe-green-hover: #006636;
+    --text-primary: #0F1A19;
+    --text-secondary: #586663;
+    --border-color: #E0E4DC;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background-color: var(--bg-main);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F2F4EF;
+}
+::-webkit-scrollbar-thumb {
+  background: #C4C9BE;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9FA697;
+}
+
+/* Design System Tokens */
+.bg-botanical-main {
+  background-color: #F2F4EF;
+}
+
+.bg-botanical-dark {
+  background-color: #162E2B;
+}
+
+.bg-botanical-card {
+  background-color: #1C3834;
+}
+
+.text-botanical-dark {
+  color: #162E2B;
+}
+
+.text-botanical-green {
+  color: #008345;
+}
+
+.border-botanical {
+  border-color: #E0E4DC;
+}
+
+.pill-button {
+  border-radius: 9999px;
+  transition: all 0.2s ease-in-out;
+}
+
+.pill-card {
+  border-radius: 1.5rem;
+}
+
+.glass-panel-dark {
+  background: rgba(22, 46, 43, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(224, 228, 220, 0.8);
+}
