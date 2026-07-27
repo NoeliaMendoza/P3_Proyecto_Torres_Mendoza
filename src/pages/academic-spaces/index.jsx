@@ -1,0 +1,1 @@
+export { AcademicSpacesPages } from "./AcademicSpacesPage";
