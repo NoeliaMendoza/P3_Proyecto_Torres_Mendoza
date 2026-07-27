@@ -1,0 +1,176 @@
+import { useForm } from 'react-hook-form';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  HiXMark, 
+  HiCalendar, 
+  HiClock, 
+  HiAcademicCap, 
+  HiBuildingOffice2, 
+  HiCheckCircle,
+  HiUsers
+} from 'react-icons/hi2';
+import { toast } from 'sonner';
+import { reservarEspacio } from '../../services/espacios.services';
+
+export const ReservationModal = ({ espacio, isOpen, onClose }) => {
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
+    defaultValues: {
+      fecha: new Date().toISOString().split('T')[0],
+      horario: '14:00 - 16:00',
+      motivo: ''
+    }
+  });
+
+  if (!isOpen || !espacio) return null;
+
+  const onSubmit = async (data) => {
+    try {
+      await reservarEspacio({
+        espacioId: espacio.id,
+        espacioNombre: espacio.nombre,
+        ...data
+      });
+      toast.success('¡Reserva registrada con éxito!', {
+        description: `Tu espacio ${espacio.nombre} ha sido reservado para el ${data.fecha} (${data.horario}).`
+      });
+      reset();
+      onClose();
+    } catch (err) {
+      toast.error('Error al procesar la reserva', {
+        description: 'Por favor intenta nuevamente.'
+      });
+    }
+  };
+
+  const horariosDisponibles = [
+    '07:00 - 09:00',
+    '09:00 - 11:00',
+    '11:00 - 13:00',
+    '14:00 - 16:00',
+    '16:00 - 18:00',
+    '18:00 - 20:00'
+  ];
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-[#0E1E1C]/70 backdrop-blur-xs"
+        />
+
+        {/* Modal Window */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          className="relative bg-white rounded-[32px] shadow-2xl border border-[#E0E4DC] w-full max-w-lg overflow-hidden z-10"
+        >
+          {/* Header Banner */}
+          <div className="bg-[#162E2B] p-6 text-white relative">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              aria-label="Cerrar modal"
+            >
+              <HiXMark className="w-5 h-5" />
+            </button>
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#008345]/30 text-[#36D080] border border-[#008345]/40 uppercase tracking-wider mb-2">
+              Confirmar Reserva de Espacio
+            </span>
+            <h2 className="text-xl font-extrabold pr-6 leading-tight font-heading">{espacio.nombre}</h2>
+            <div className="flex items-center gap-4 text-xs text-[#9EB0AA] font-semibold mt-2">
+              <span className="flex items-center gap-1">
+                <HiBuildingOffice2 className="w-4 h-4 text-[#36D080]" /> {espacio.edificio}
+              </span>
+              <span className="flex items-center gap-1">
+                <HiUsers className="w-4 h-4 text-[#36D080]" /> {espacio.capacidad} personas
+              </span>
+            </div>
+          </div>
+
+          {/* Form Content */}
+          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+            {/* Date Field */}
+            <div>
+              <label className="block text-xs font-bold text-[#0F1A19] mb-1.5 flex items-center gap-1.5">
+                <HiCalendar className="w-4 h-4 text-[#008345]" />
+                Fecha de Reserva
+              </label>
+              <input
+                type="date"
+                min={new Date().toISOString().split('T')[0]}
+                {...register('fecha', { required: 'La fecha es obligatoria' })}
+                className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-bold text-[#0F1A19] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345]"
+              />
+              {errors.fecha && (
+                <p className="text-[11px] text-rose-500 mt-1 font-semibold">{errors.fecha.message}</p>
+              )}
+            </div>
+
+            {/* Time Slot Select */}
+            <div>
+              <label className="block text-xs font-bold text-[#0F1A19] mb-1.5 flex items-center gap-1.5">
+                <HiClock className="w-4 h-4 text-[#008345]" />
+                Franja Horaria
+              </label>
+              <select
+                {...register('horario', { required: 'Seleccione un horario' })}
+                className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-bold text-[#0F1A19] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345]"
+              >
+                {horariosDisponibles.map((h) => (
+                  <option key={h} value={h}>
+                    {h}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Motivo Area */}
+            <div>
+              <label className="block text-xs font-bold text-[#0F1A19] mb-1.5 flex items-center gap-1.5">
+                <HiAcademicCap className="w-4 h-4 text-[#008345]" />
+                Propósito de Uso Académico
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Ejemplo: Preparación de proyecto final de software web, estudio grupal..."
+                {...register('motivo', { 
+                  required: 'Indique el propósito académico', 
+                  minLength: { value: 10, message: 'Describa al menos 10 caracteres' } 
+                })}
+                className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-semibold text-[#0F1A19] placeholder-[#8A9693] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345] resize-none"
+              />
+              {errors.motivo && (
+                <p className="text-[11px] text-rose-500 mt-1 font-semibold">{errors.motivo.message}</p>
+              )}
+            </div>
+
+            {/* Footer buttons */}
+            <div className="pt-4 border-t border-[#E0E4DC] flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2.5 rounded-full text-xs font-extrabold text-[#586663] hover:bg-[#F2F4EF] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 rounded-full text-xs font-extrabold bg-[#008345] hover:bg-[#006636] text-white shadow-md shadow-[#008345]/20 flex items-center gap-2 transition-all"
+              >
+                <HiCheckCircle className="w-4 h-4" />
+                {isSubmitting ? 'Confirmando...' : 'Confirmar Reserva'}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};
