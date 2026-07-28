@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
+import { Button, Card, CardContent } from '@heroui/react';
+import { HiArrowDownTray, HiDevicePhoneMobile, HiXMark } from 'react-icons/hi2';
 import { toast } from 'sonner';
 import { processOfflineQueue } from '../../services/offlineQueue';
 
 const PWAInstallButton = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(() => window.__espeDeferredPrompt);
+  const [dismissed, setDismissed] = useState(
+    () => window.sessionStorage.getItem('espe:pwa-install-dismissed') === 'true'
+  );
 
   useEffect(() => {
     const handler = (e) => {
@@ -11,31 +16,71 @@ const PWAInstallButton = () => {
       window.__espeDeferredPrompt = e;
       setDeferredPrompt(e);
     };
+    const handleInstalled = () => {
+      window.__espeDeferredPrompt = null;
+      setDeferredPrompt(null);
+    };
     if (window.__espeDeferredPrompt) setDeferredPrompt(window.__espeDeferredPrompt);
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', handleInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', handleInstalled);
+    };
   }, []);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt();
+    await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       window.__espeDeferredPrompt = null;
       setDeferredPrompt(null);
+      toast.success('ESPEConnect se instaló correctamente.');
     }
   };
 
-  if (!deferredPrompt) return null;
+  const handleDismiss = () => {
+    window.sessionStorage.setItem('espe:pwa-install-dismissed', 'true');
+    setDismissed(true);
+  };
+
+  if (!deferredPrompt || dismissed) return null;
 
   return (
-    <button type="button" onClick={handleInstall} className="pwa-install-btn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="7 10 12 15 17 10" />
-        <line x1="12" y1="15" x2="12" y2="3" />
-      </svg>
-    </button>
+    <Card className="pwa-install-card" shadow="lg">
+      <CardContent className="pwa-install-card__content">
+        <div className="pwa-install-card__icon" aria-hidden="true">
+          <HiDevicePhoneMobile />
+        </div>
+
+        <div className="pwa-install-card__copy">
+          <strong>Instala ESPEConnect</strong>
+          <span>Accede más rápido y úsala incluso sin conexión.</span>
+        </div>
+
+        <Button
+          size="sm"
+          color="primary"
+          onPress={handleInstall}
+          startContent={<HiArrowDownTray aria-hidden="true" />}
+          className="pwa-install-card__action"
+        >
+          Instalar
+        </Button>
+
+        <Button
+          isIconOnly
+          size="sm"
+          variant="light"
+          onPress={handleDismiss}
+          aria-label="Cerrar sugerencia de instalación"
+          className="pwa-install-card__close"
+        >
+          <HiXMark aria-hidden="true" />
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 

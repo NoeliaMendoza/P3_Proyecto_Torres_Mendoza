@@ -1,8 +1,19 @@
 import { expect, test } from '@playwright/test';
 
 test('rechaza una segunda reserva que se superpone con una reserva activa', async ({ request }) => {
+  const uniqueEmail = `reservas.${Date.now()}@espe.edu.ec`;
+  const password = 'Segura#2026';
+  const registrationResponse = await request.post('/api/auth/register', {
+    data: {
+      nombre: 'Estudiante Prueba Reservas',
+      correo: uniqueEmail,
+      password,
+    },
+  });
+  expect(registrationResponse.status()).toBe(201);
+
   const loginResponse = await request.post('/api/auth/login', {
-    data: { correo: 'ceandrade@espe.edu.ec', password: 'espe2026' },
+    data: { correo: uniqueEmail, password },
   });
   expect(loginResponse.ok()).toBeTruthy();
   const { token } = await loginResponse.json();
@@ -61,7 +72,7 @@ test('rechaza una segunda reserva que se superpone con una reserva activa', asyn
   const reservations = await adminList.json();
   const createdReservation = reservations.find((item) => item.id === firstBody.reserva.id);
   expect(createdReservation).toEqual(expect.objectContaining({
-    estudiante_email: 'ceandrade@espe.edu.ec',
+    estudiante_email: uniqueEmail,
     espacio_id: spaces[0].id,
     estado: 'pendiente',
   }));

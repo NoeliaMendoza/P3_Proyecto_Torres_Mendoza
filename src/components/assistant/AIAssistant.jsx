@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   HiArrowPath,
+  HiChatBubbleLeftEllipsis,
   HiCpuChip,
   HiPaperAirplane,
-  HiSparkles,
   HiXMark,
 } from 'react-icons/hi2';
 import { askLocalAssistant, getAIStatus } from '../../services/ai.services';
@@ -92,7 +92,7 @@ export const AIAssistant = () => {
         aria-label="Abrir asistente de inteligencia artificial"
         className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-2xl bg-[#036666] text-[#99E2B4] shadow-[0_16px_40px_rgba(3,102,102,0.3)] transition hover:scale-105 hover:bg-[#14746F]"
       >
-        <HiSparkles className="h-6 w-6" />
+        <HiChatBubbleLeftEllipsis className="h-6 w-6" />
       </button>
 
       <AnimatePresence>
