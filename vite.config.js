@@ -19,6 +19,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icons/*.png', 'push-handler.js'],
+      devOptions: { enabled: true, type: 'module' },
       workbox: {
         navigateFallback: '/index.html',
         importScripts: ['/push-handler.js'],

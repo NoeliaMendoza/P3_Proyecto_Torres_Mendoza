@@ -5,6 +5,12 @@ import './index.css'
 import App from './App.jsx'
 import { registerSW } from "virtual:pwa-register"
 
+window.__espeDeferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.__espeDeferredPrompt = e;
+});
+
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {

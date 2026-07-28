@@ -3,13 +3,15 @@ import { toast } from 'sonner';
 import { processOfflineQueue } from '../../services/offlineQueue';
 
 const PWAInstallButton = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [deferredPrompt, setDeferredPrompt] = useState(() => window.__espeDeferredPrompt);
 
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
+      window.__espeDeferredPrompt = e;
       setDeferredPrompt(e);
     };
+    if (window.__espeDeferredPrompt) setDeferredPrompt(window.__espeDeferredPrompt);
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
@@ -18,7 +20,10 @@ const PWAInstallButton = () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') setDeferredPrompt(null);
+    if (outcome === 'accepted') {
+      window.__espeDeferredPrompt = null;
+      setDeferredPrompt(null);
+    }
   };
 
   if (!deferredPrompt) return null;
