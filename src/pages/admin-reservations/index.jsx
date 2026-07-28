@@ -1,0 +1,1 @@
+export { AdminReservationsPage } from './AdminReservationsPage';
