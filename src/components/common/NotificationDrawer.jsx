@@ -9,6 +9,7 @@ import {
   HiTrash
 } from 'react-icons/hi2';
 import { useUIStore } from '../../store/uiStore';
+import { PushControls } from './PushControls';
 
 export const NotificationDrawer = () => {
   const { 
@@ -79,6 +80,8 @@ export const NotificationDrawer = () => {
                 <HiXMark className="w-5 h-5" />
               </button>
             </div>
+
+            <PushControls />
 
             {/* Actions Bar */}
             {notificaciones.length > 0 && (

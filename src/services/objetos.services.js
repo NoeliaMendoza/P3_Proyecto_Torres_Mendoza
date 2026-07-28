@@ -1,38 +1,48 @@
 import api from '../api/axios';
 import { useUIStore } from '../store/uiStore';
+import { isNetworkError, queueRequest } from './offlineQueue';
 
 export const obtenerObjetos = async (params) => {
   try {
-    const response = await api.get('/objetos', { params });
+    const response = await api.get('/objetos-perdidos', { params });
     return response.data;
   } catch (error) {
+    if (!isNetworkError(error)) throw error;
     let objetos = useUIStore.getState().objetos;
-    if (params?.tipo && params.tipo !== 'todos') {
-      objetos = objetos.filter(o => o.tipo === params.tipo);
-    }
-    if (params?.categoria && params.categoria !== 'todas') {
-      objetos = objetos.filter(o => o.categoria === params.categoria);
-    }
+    if (params?.tipo && params.tipo !== 'todos') objetos = objetos.filter((o) => o.tipo === params.tipo);
+    if (params?.categoria && params.categoria !== 'todas') objetos = objetos.filter((o) => o.categoria === params.categoria);
     if (params?.search) {
       const query = params.search.toLowerCase();
-      objetos = objetos.filter(o => o.nombre.toLowerCase().includes(query) || o.lugar.toLowerCase().includes(query));
+      objetos = objetos.filter((o) =>
+        o.nombre?.toLowerCase().includes(query) || o.lugar?.toLowerCase().includes(query));
     }
     return objetos;
   }
 };
 
 export const crearObjeto = async (data) => {
+  const payload = {
+    titulo: data.nombre,
+    descripcion: data.descripcion,
+    tipo: data.tipo,
+    ubicacion: data.lugar,
+    fecha_evento: data.fecha,
+    informacion_contacto: data.reportante_contacto,
+  };
   try {
-    const response = await api.post('/objetos', data);
+    const response = await api.post('/objetos-perdidos', payload);
     return response.data;
   } catch (error) {
-    const nuevo = {
-      id: Date.now(),
+    if (!isNetworkError(error)) throw error;
+    const queueId = await queueRequest({ url: '/objetos-perdidos', data: payload });
+    const objeto = {
+      id: `pending-${queueId}`,
       ...data,
-      estado: data.tipo === 'perdido' ? 'Perdido' : 'En custodia',
-      imagen: data.imagen || 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=800&q=80'
+      estado: 'pendiente_sincronizacion',
+      pendienteSincronizacion: true,
+      imagen: data.imagen,
     };
-    useUIStore.getState().agregarObjeto(nuevo);
-    return nuevo;
+    useUIStore.getState().agregarObjeto(objeto);
+    return { objeto, queued: true };
   }
 };

@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16
@@ -9,11 +7,16 @@ services:
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/pwa-features.sql:/docker-entrypoint-initdb.d/02-pwa-features.sql:ro
+      - ./database/seed_horarios.sql:/docker-entrypoint-initdb.d/03-seed-horarios.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
 
   backend:
     build: ./server
@@ -22,6 +25,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      NODE_ENV: production
       PUERTO: 3000
       DB_HOST: db
       DB_PORT: 5432
@@ -29,19 +33,35 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@espe.edu.ec}
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:0.5b}
+      SEED_DEMO_USERS: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   frontend:
-    build: .
+    build:
+      context: .
+      args:
+        VITE_API_URL: /api
     container_name: espe_frontend
     restart: always
     ports:
-      - "4173:4173"
-    environment:
-      VITE_API_URL: http://localhost:3000
+      - "4173:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   db_data:
