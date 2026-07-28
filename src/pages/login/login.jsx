@@ -1,285 +1,456 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  HiAcademicCap, 
-  HiEnvelope, 
-  HiLockClosed, 
-  HiArrowRight, 
-  HiCheckCircle, 
-  HiShieldCheck, 
+import { AnimatePresence, motion } from 'framer-motion';
+import { Button, Card, CardContent, Checkbox, Chip, Input } from '@heroui/react';
+import {
+  HiAcademicCap,
+  HiArrowRight,
+  HiBuildingOffice2,
+  HiCalendarDays,
+  HiEnvelope,
+  HiLockClosed,
+  HiMagnifyingGlass,
   HiQuestionMarkCircle,
-  HiXMark
+  HiShieldCheck,
+  HiUser,
+  HiXMark,
 } from 'react-icons/hi2';
 import { toast } from 'sonner';
-import { login, recperarPasswordService } from '../../services/auth.services';
+import { login, recperarPasswordService, registerUser } from '../../services/auth.services';
 import { useAuthStore } from '../../store/authStore';
+import { PasswordRequirements } from '../../components/auth/PasswordRequirements';
+import { validateRegistration } from '../../validation/registration';
+
+const FEATURES = [
+  { icon: HiCalendarDays, title: 'Horarios', description: 'Tu jornada académica en un solo lugar.' },
+  { icon: HiBuildingOffice2, title: 'Espacios', description: 'Consulta y reserva recursos del campus.' },
+  { icon: HiMagnifyingGlass, title: 'Comunidad', description: 'Reporta y encuentra objetos perdidos.' },
+];
+
+const FormField = ({
+  label,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
+  autoComplete,
+  icon: Icon,
+  required = false,
+  error,
+}) => (
+  <label className="block space-y-1.5">
+    <span className="ml-1 block text-xs font-extrabold text-[#123B38]">{label}</span>
+    <div className="relative">
+      {Icon && (
+        <Icon className="pointer-events-none absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-[#469D89]" />
+      )}
+      <Input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        required={required}
+        aria-label={label}
+        aria-invalid={Boolean(error)}
+        className={`h-12 w-full rounded-2xl border bg-[#F4FAF7] pr-4 text-sm text-[#123B38] outline-none transition focus:ring-4 ${
+          error
+            ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100'
+            : 'border-[#D8EAE2] focus:border-[#358F80] focus:ring-[#99E2B4]/25'
+        } ${
+          Icon ? 'pl-11' : 'pl-4'
+        }`}
+      />
+    </div>
+    {error && <span role="alert" className="ml-1 block text-[11px] font-semibold text-rose-600">{error}</span>}
+  </label>
+);
 
 export const LoginPages = () => {
   const [correo, setCorreo] = useState('ceandrade@espe.edu.ec');
   const [password, setPassword] = useState('espe2026');
+  const [nombre, setNombre] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [registerErrors, setRegisterErrors] = useState({});
+  const [mode, setMode] = useState('login');
   const [recordarme, setRecordarme] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [modalForgotOpen, setModalForgotOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
-
+  const [recoveryOpen, setRecoveryOpen] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState('');
   const navigate = useNavigate();
-  const loginStore = useAuthStore((s) => s.login);
+  const saveSession = useAuthStore((state) => state.login);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     try {
       const data = await login(correo, password);
-      loginStore(data.usuario, data.token);
-      toast.success('¡Bienvenido a ESPEConnect!', {
-        description: `Sesión iniciada como ${data.usuario.nombre}`
+      saveSession(data.usuario, data.token);
+      toast.success('Bienvenido a ESPEConnect', {
+        description: `Sesión iniciada como ${data.usuario.nombre}`,
       });
       navigate('/dashboard');
-    } catch (err) {
-      toast.error('Error de autenticación', {
-        description: 'Verifique su correo institucional y contraseña.'
+    } catch (error) {
+      toast.error('No pudimos iniciar sesión', {
+        description: error.response?.data?.mensaje || 'Verifica tus credenciales y la conexión.',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const fillDemoStudent = () => {
-    setCorreo('ceandrade@espe.edu.ec');
-    setPassword('espe2026');
-  };
+  const handleRegister = async (event) => {
+    event.preventDefault();
+    if (loading) return;
 
-  const fillDemoAdmin = () => {
-    setCorreo('admin@espe.edu.ec');
-    setPassword('admin2026');
-  };
-
-  const handleForgotSubmit = async (e) => {
-    e.preventDefault();
-    if (!forgotEmail) return;
-    await recperarPasswordService(forgotEmail);
-    toast.success('Solicitud enviada', {
-      description: `Se han enviado las instrucciones de recuperación a ${forgotEmail}`
+    const validation = validateRegistration({
+      nombre,
+      correo,
+      password,
+      confirmPassword,
+      acceptedTerms,
     });
-    setModalForgotOpen(false);
-    setForgotEmail('');
+    setRegisterErrors(validation.errors);
+    if (!validation.valid) {
+      toast.error('Revisa los campos señalados.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await registerUser(
+        validation.values.nombre,
+        validation.values.correo,
+        validation.values.password,
+      );
+      toast.success('Cuenta creada correctamente', {
+        description: 'Tu cuenta fue registrada con el rol Estudiante. Ya puedes iniciar sesión.',
+      });
+      setMode('login');
+      setNombre('');
+      setConfirmPassword('');
+      setAcceptedTerms(false);
+      setRegisterErrors({});
+    } catch (error) {
+      const backendErrors = error.response?.data?.errores;
+      if (backendErrors) setRegisterErrors((current) => ({ ...current, ...backendErrors }));
+      toast.error('No pudimos crear la cuenta', {
+        description: error.response?.data?.mensaje || 'Revisa los datos e inténtalo nuevamente.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRecovery = async (event) => {
+    event.preventDefault();
+    try {
+      await recperarPasswordService(recoveryEmail);
+      toast.success('Solicitud recibida', {
+        description: 'Si la cuenta existe, recibirás las instrucciones correspondientes.',
+      });
+      setRecoveryOpen(false);
+      setRecoveryEmail('');
+    } catch (error) {
+      toast.error(error.message || 'No fue posible procesar la solicitud.');
+    }
+  };
+
+  const useDemo = (role) => {
+    const isAdmin = role === 'admin';
+    setCorreo(isAdmin ? 'admin@espe.edu.ec' : 'ceandrade@espe.edu.ec');
+    setPassword(isAdmin ? 'admin2026' : 'espe2026');
+  };
+
+  const changeMode = (nextMode) => {
+    setMode(nextMode);
+    setNombre('');
+    setConfirmPassword('');
+    setAcceptedTerms(false);
+    setRegisterErrors({});
+    if (nextMode === 'register') {
+      setCorreo('');
+      setPassword('');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#10201E] flex items-center justify-center p-4 lg:p-8 font-sans">
-      <div className="w-full max-w-5xl bg-white rounded-[32px] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px] border border-[#264743]/50">
-        
-        {/* Left Side: Institutional Graphic Banner (7 cols) */}
-        <div className="lg:col-span-7 bg-[#162E2B] p-8 lg:p-12 text-white relative flex flex-col justify-between overflow-hidden">
-          {/* Background Image / Pattern overlay inspired by the reference design */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#008345]/30 via-transparent to-transparent" />
-          <div className="absolute -right-20 -top-20 w-96 h-96 rounded-full bg-[#008345]/20 blur-3xl pointer-events-none" />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F4FAF7] p-4 md:p-8">
+      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-[#99E2B4]/45 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-48 -right-32 h-[32rem] w-[32rem] rounded-full bg-[#56AB91]/30 blur-3xl" />
 
-          {/* Top Brand Header */}
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#008345] flex items-center justify-center text-white shadow-lg border border-emerald-400/30">
-              <HiAcademicCap className="w-7 h-7 text-white" />
+      <div className="relative mx-auto grid w-full max-w-4xl overflow-hidden rounded-[2rem] border border-[#D8EAE2] bg-white shadow-[0_30px_80px_rgba(3,102,102,0.12)] lg:grid-cols-[0.95fr_1.05fr]">
+        <section className="relative hidden overflow-hidden bg-[#036666] p-8 text-white lg:flex lg:flex-col">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(153,226,180,0.28),transparent_38%)]" />
+          <div className="relative flex items-center gap-3">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#99E2B4] text-[#036666]">
+              <HiAcademicCap className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight font-heading">
-                ESPE<span className="text-[#36D080]">Connect</span>
-              </h1>
-              <p className="text-xs text-[#9EB0AA] font-semibold">
-                Universidad de las Fuerzas Armadas ESPE
-              </p>
+              <p className="font-heading text-xl font-extrabold">ESPEConnect</p>
+              <p className="text-xs text-[#C8E8D7]">Campus digital universitario</p>
             </div>
           </div>
 
-          {/* Center Graphic Details */}
-          <div className="relative z-10 my-8 space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#008345]/20 border border-[#008345]/40 text-[#36D080] text-xs font-extrabold">
-              <HiShieldCheck className="w-4 h-4 text-[#36D080]" />
-              Plataforma Única de Campus Digital
-            </div>
-            <h2 className="text-3xl lg:text-4xl font-extrabold leading-tight font-heading">
-              Conectando estudiantes con el campus inteligente.
-            </h2>
-            <p className="text-sm text-[#D1D9D6] leading-relaxed max-w-md">
-              Gestiona tus reservas de espacios académicos, consulta la biblioteca, reporta objetos perdidos y mantente informado con alertas en tiempo real.
+          <div className="relative my-12 max-w-xl">
+            <Chip className="mb-4 bg-white/10 text-[#99E2B4]">Universidad ESPE</Chip>
+            <h1 className="font-heading text-3xl font-extrabold leading-tight">
+              Todo tu campus,
+              <span className="block text-[#99E2B4]">más simple y conectado.</span>
+            </h1>
+            <p className="mt-4 max-w-lg text-xs leading-6 text-[#C8E8D7]">
+              Organiza tus actividades, encuentra espacios disponibles y mantente al día desde una experiencia rápida e instalable.
             </p>
 
-            {/* Feature highlight pill cards */}
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                <span className="text-xs font-extrabold text-[#36D080] block mb-1">Reserva Instantánea</span>
-                <span className="text-[11px] text-[#B0BFBB] font-medium">Laboratorios, auditorios y cubículos.</span>
-              </div>
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                <span className="text-xs font-extrabold text-[#36D080] block mb-1">Objetos Perdidos</span>
-                <span className="text-[11px] text-[#B0BFBB] font-medium">Comunidad de recuperación del campus.</span>
-              </div>
+            <div className="mt-7 grid gap-2.5">
+              {FEATURES.map(({ icon: Icon, title, description }) => (
+                <div key={title} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/7 p-3">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#99E2B4] text-[#036666]">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-extrabold">{title}</p>
+                    <p className="mt-0.5 text-xs text-[#C8E8D7]">{description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Footer Badge */}
-          <div className="relative z-10 text-xs text-[#8EA09A] font-semibold border-t border-white/10 pt-4 flex items-center justify-between">
-            <span>© 2026 Universidad de las Fuerzas Armadas ESPE</span>
-            <span className="text-[#36D080] font-extrabold">Matriz Sangolquí</span>
-          </div>
-        </div>
+          <p className="relative text-xs text-[#C8E8D7]">Seguro · Accesible · Disponible sin conexión</p>
+        </section>
 
-        {/* Right Side: Login Form (5 cols) */}
-        <div className="lg:col-span-5 p-8 lg:p-10 flex flex-col justify-between bg-white">
-          <div>
-            <div className="mb-6">
-              <h3 className="text-xl font-extrabold text-[#0F1A19] font-heading">Iniciar Sesión</h3>
-              <p className="text-xs text-[#586663] font-semibold mt-1">
-                Ingresa con tu correo institucional @espe.edu.ec
+        <section className="flex items-center justify-center p-6 sm:p-8 lg:p-10">
+          <div className="w-full max-w-md">
+            <div className="mb-8 lg:hidden">
+              <div className="mb-3 grid h-11 w-11 place-items-center rounded-2xl bg-[#036666] text-[#99E2B4]">
+                <HiAcademicCap className="h-6 w-6" />
+              </div>
+              <p className="font-heading text-xl font-extrabold text-[#036666]">ESPEConnect</p>
+            </div>
+
+            <div className="mb-5">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#469D89]">
+                {mode === 'login' ? 'Acceso institucional' : 'Nueva cuenta'}
+              </p>
+              <h2 className="mt-1.5 font-heading text-2xl font-extrabold text-[#123B38]">
+                {mode === 'login' ? 'Bienvenido de nuevo' : 'Únete a ESPEConnect'}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[#52716B]">
+                {mode === 'login'
+                  ? 'Ingresa con tu correo institucional para continuar.'
+                  : 'Regístrate con tus datos institucionales.'}
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email */}
-              <div>
-                <label className="block text-xs font-bold text-[#0F1A19] mb-1.5">
-                  Correo Institucional
-                </label>
-                <div className="relative">
-                  <HiEnvelope className="w-4 h-4 text-[#586663] absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
+            <Card className="border border-[#D8EAE2] bg-white shadow-none">
+              <CardContent className="p-5">
+                <form onSubmit={mode === 'login' ? handleSubmit : handleRegister} className="space-y-3.5">
+                  {mode === 'register' && (
+                    <FormField
+                      label="Nombre completo"
+                      value={nombre}
+                      onChange={(event) => {
+                        setNombre(event.target.value);
+                        setRegisterErrors((current) => ({ ...current, nombre: undefined }));
+                      }}
+                      placeholder="Ej. Carlos Eduardo Andrade"
+                      autoComplete="name"
+                      icon={HiUser}
+                      required
+                      error={registerErrors.nombre}
+                    />
+                  )}
+                  <FormField
                     type="email"
+                    label="Correo institucional"
                     value={correo}
-                    onChange={(e) => setCorreo(e.target.value)}
-                    placeholder="estudiante@espe.edu.ec"
+                    onChange={(event) => {
+                      setCorreo(event.target.value);
+                      setRegisterErrors((current) => ({ ...current, correo: undefined }));
+                    }}
+                    placeholder="usuario@espe.edu.ec"
+                    autoComplete="email"
+                    icon={HiEnvelope}
                     required
-                    className="w-full pl-11 pr-4 py-3 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-semibold text-[#0F1A19] placeholder-[#8A9693] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345] transition-all"
+                    error={mode === 'register' ? registerErrors.correo : undefined}
                   />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-xs font-bold text-[#0F1A19] mb-1.5">
-                  Contraseña
-                </label>
-                <div className="relative">
-                  <HiLockClosed className="w-4 h-4 text-[#586663] absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
+                  <FormField
                     type="password"
+                    label="Contraseña"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      setRegisterErrors((current) => ({ ...current, password: undefined }));
+                    }}
+                    placeholder={mode === 'login' ? 'Ingresa tu contraseña' : 'Crea una contraseña segura'}
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    icon={HiLockClosed}
                     required
-                    className="w-full pl-11 pr-4 py-3 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-semibold text-[#0F1A19] placeholder-[#8A9693] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345] transition-all"
+                    error={mode === 'register' ? registerErrors.password : undefined}
                   />
-                </div>
-              </div>
 
-              {/* Remember me & Forgot Password */}
-              <div className="flex items-center justify-between text-xs pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-[#586663] font-semibold">
-                  <input
-                    type="checkbox"
-                    checked={recordarme}
-                    onChange={(e) => setRecordarme(e.target.checked)}
-                    className="w-4 h-4 text-[#008345] rounded-md border-[#E0E4DC] focus:ring-[#008345]"
-                  />
-                  Recordarme
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setModalForgotOpen(true)}
-                  className="font-bold text-[#008345] hover:underline transition-colors"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
-              </div>
+                  {mode === 'register' ? (
+                    <>
+                      <PasswordRequirements password={password} />
+                      <FormField
+                        type="password"
+                        label="Confirmar contraseña"
+                        value={confirmPassword}
+                        onChange={(event) => {
+                          setConfirmPassword(event.target.value);
+                          setRegisterErrors((current) => ({ ...current, confirmPassword: undefined }));
+                        }}
+                        placeholder="Repite la contraseña"
+                        autoComplete="new-password"
+                        icon={HiLockClosed}
+                        required
+                        error={registerErrors.confirmPassword}
+                      />
+                      <div>
+                        <Checkbox
+                          isSelected={acceptedTerms}
+                          onValueChange={(selected) => {
+                            setAcceptedTerms(selected);
+                            setRegisterErrors((current) => ({ ...current, acceptedTerms: undefined }));
+                          }}
+                          classNames={{ label: 'text-xs leading-5 text-[#52716B]' }}
+                        >
+                          Acepto los términos de uso y la política de privacidad.
+                        </Checkbox>
+                        {registerErrors.acceptedTerms && (
+                          <p role="alert" className="ml-1 mt-1 text-[11px] font-semibold text-rose-600">
+                            {registerErrors.acceptedTerms}
+                          </p>
+                        )}
+                        <p className="ml-7 mt-1 text-[10px] font-semibold text-[#6A8881]">
+                          Las cuentas creadas aquí reciben el rol Estudiante.
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-between gap-3">
+                      <Checkbox
+                        isSelected={recordarme}
+                        onValueChange={setRecordarme}
+                        classNames={{ label: 'text-xs text-[#52716B]' }}
+                      >
+                        Recordarme
+                      </Checkbox>
+                      <Button
+                        variant="light"
+                        size="sm"
+                        onPress={() => setRecoveryOpen(true)}
+                        className="px-2 text-xs font-bold text-[#14746F]"
+                      >
+                        ¿Olvidaste tu contraseña?
+                      </Button>
+                    </div>
+                  )}
 
-              {/* Submit Pill Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 px-4 bg-[#008345] hover:bg-[#006636] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#008345]/20 flex items-center justify-center gap-2 transition-all mt-2"
-              >
-                <span>{loading ? 'Autenticando...' : 'Acceder al Sistema'}</span>
-                <HiArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
+                  <Button
+                    type="submit"
+                    isLoading={loading}
+                    isDisabled={loading}
+                    className="h-12 w-full rounded-2xl bg-[#036666] font-extrabold text-white shadow-lg shadow-[#036666]/15"
+                    endContent={!loading && <HiArrowRight className="h-4 w-4" />}
+                  >
+                    {loading
+                      ? mode === 'login' ? 'Autenticando…' : 'Creando cuenta…'
+                      : mode === 'login' ? 'Acceder al sistema' : 'Crear cuenta'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
 
-          {/* Quick Fill Demo Helpers */}
-          <div className="mt-6 pt-5 border-t border-[#E0E4DC]">
-            <p className="text-[11px] font-extrabold text-[#586663] uppercase tracking-wider mb-2">
-              Credenciales de Prueba Rápida
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={fillDemoStudent}
-                className="px-3.5 py-2.5 rounded-full text-[11px] font-extrabold bg-[#F2F4EF] hover:bg-[#E6F3EC] text-[#162E2B] border border-[#E0E4DC] transition-all text-center truncate"
+            <div className="mt-4 flex items-center justify-center gap-1 text-xs text-[#52716B]">
+              <span>{mode === 'login' ? '¿No tienes una cuenta?' : '¿Ya tienes una cuenta?'}</span>
+              <Button
+                variant="light"
+                size="sm"
+                onPress={() => changeMode(mode === 'login' ? 'register' : 'login')}
+                className="px-2 text-xs font-extrabold text-[#14746F]"
               >
-                Modo Estudiante
-              </button>
-              <button
-                type="button"
-                onClick={fillDemoAdmin}
-                className="px-3.5 py-2.5 rounded-full text-[11px] font-extrabold bg-[#F2F4EF] hover:bg-[#E6F3EC] text-[#162E2B] border border-[#E0E4DC] transition-all text-center truncate"
-              >
-                Modo Administrador
-              </button>
+                {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
+              </Button>
             </div>
+
+            {mode === 'login' && <div className="mt-4">
+              <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-wider text-[#6A8881]">Accesos de demostración</p>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="flat"
+                  onPress={() => useDemo('student')}
+                  className="rounded-2xl bg-[#EAF6F0] text-xs font-bold text-[#036666]"
+                  startContent={<HiAcademicCap className="h-4 w-4" />}
+                >
+                  Estudiante
+                </Button>
+                <Button
+                  variant="flat"
+                  onPress={() => useDemo('admin')}
+                  className="rounded-2xl bg-[#EAF6F0] text-xs font-bold text-[#036666]"
+                  startContent={<HiShieldCheck className="h-4 w-4" />}
+                >
+                  Administrador
+                </Button>
+              </div>
+            </div>}
           </div>
-        </div>
+        </section>
       </div>
 
-      {/* Forgot Password Modal */}
       <AnimatePresence>
-        {modalForgotOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
+        {recoveryOpen && (
+          <div className="fixed inset-0 z-50 grid place-items-center p-4">
+            <motion.button
+              aria-label="Cerrar recuperación"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setModalForgotOpen(false)}
-              className="fixed inset-0 bg-[#0E1E1C]/70 backdrop-blur-xs"
+              onClick={() => setRecoveryOpen(false)}
+              className="absolute inset-0 bg-[#024E50]/60 backdrop-blur-sm"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative bg-white rounded-[32px] p-6 w-full max-w-md shadow-2xl border border-[#E0E4DC] z-10"
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              className="surface-card relative z-10 w-full max-w-md p-6"
             >
-              <button
-                onClick={() => setModalForgotOpen(false)}
-                className="absolute top-4 right-4 p-1 text-[#586663] hover:text-[#0F1A19] rounded-lg"
+              <Button
+                isIconOnly
+                variant="light"
+                onPress={() => setRecoveryOpen(false)}
+                aria-label="Cerrar"
+                className="absolute right-3 top-3 rounded-xl text-[#52716B]"
               >
-                <HiXMark className="w-5 h-5" />
-              </button>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-[#E6F3EC] text-[#008345] rounded-2xl">
-                  <HiQuestionMarkCircle className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="text-base font-extrabold text-[#0F1A19] font-heading">Recuperación de Contraseña</h4>
-                  <p className="text-xs text-[#586663] font-semibold">Ingresa tu correo institucional</p>
-                </div>
+                <HiXMark className="h-5 w-5" />
+              </Button>
+              <div className="mb-5 grid h-11 w-11 place-items-center rounded-2xl bg-[#EAF6F0] text-[#036666]">
+                <HiQuestionMarkCircle className="h-6 w-6" />
               </div>
-              <form onSubmit={handleForgotSubmit} className="space-y-4 mt-4">
-                <input
+              <h3 className="font-heading text-xl font-extrabold text-[#123B38]">Recuperar acceso</h3>
+              <p className="mt-1 text-sm text-[#52716B]">Ingresa tu correo institucional.</p>
+              <form onSubmit={handleRecovery} className="mt-5 space-y-4">
+                <FormField
                   type="email"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  placeholder="ejemplo@espe.edu.ec"
+                  label="Correo institucional"
+                  value={recoveryEmail}
+                  onChange={(event) => setRecoveryEmail(event.target.value)}
+                  placeholder="usuario@espe.edu.ec"
+                  autoComplete="email"
+                  icon={HiEnvelope}
                   required
-                  className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-semibold text-[#0F1A19] focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345]"
                 />
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-[#008345] hover:bg-[#006636] text-white font-extrabold text-xs rounded-full shadow-md transition-all"
-                >
-                  Enviar Código de Recuperación
-                </button>
+                <Button type="submit" className="w-full rounded-2xl bg-[#036666] font-bold text-white">
+                  Enviar solicitud
+                </Button>
               </form>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </main>
   );
 };

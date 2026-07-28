@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { Card, CardHeader, CardContent, CardFooter, Button, Chip } from '@heroui/react';
+﻿import { motion } from 'framer-motion';
+import { Card, CardContent, Button, Chip } from '@heroui/react';
 import { 
   HiBuildingOffice2, 
   HiUsers, 
@@ -15,7 +15,7 @@ export const SpaceCard = ({ espacio, onReservar }) => {
     switch (estado) {
       case 'disponible':
         return (
-          <Chip className="bg-[#008345] text-white font-extrabold text-xs" radius="full">
+          <Chip className="bg-[#358F80] text-white font-extrabold text-xs" radius="full">
             <span className="flex items-center gap-1">
               <HiCheckCircle className="w-3.5 h-3.5" />
               Disponible
@@ -48,19 +48,19 @@ export const SpaceCard = ({ espacio, onReservar }) => {
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className="bg-white rounded-[28px] border border-[#E0E4DC] overflow-hidden shadow-xs hover:shadow-xl transition-all flex flex-col group p-0">
+      <Card className="bg-white rounded-[28px] border border-[#D8EAE2] overflow-hidden shadow-xs hover:shadow-xl transition-all flex flex-col group p-0">
         {/* Image Banner */}
-        <div className="relative h-52 w-full overflow-hidden bg-[#162E2B]">
+        <div className="relative h-52 w-full overflow-hidden bg-[#036666]">
           <img
             src={espacio.imagen}
             alt={espacio.nombre}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0E1E1C] via-[#0E1E1C]/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#024E50] via-[#024E50]/20 to-transparent" />
           
           {/* Top Badges */}
           <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-            <Chip className="bg-[#162E2B]/90 text-white font-extrabold text-[10px] uppercase border border-white/20" radius="full">
+            <Chip className="bg-[#036666]/90 text-white font-extrabold text-[10px] uppercase border border-white/20" radius="full">
               {espacio.tipo}
             </Chip>
             {getStatusBadge(espacio.estado)}
@@ -78,18 +78,18 @@ export const SpaceCard = ({ espacio, onReservar }) => {
         <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-4">
           <div>
             {/* Location & Capacity Row */}
-            <div className="grid grid-cols-2 gap-2 text-xs text-[#586663] mb-3 font-semibold">
+            <div className="grid grid-cols-2 gap-2 text-xs text-[#52716B] mb-3 font-semibold">
               <div className="flex items-center gap-1.5 truncate">
-                <HiBuildingOffice2 className="w-4 h-4 text-[#008345] shrink-0" />
+                <HiBuildingOffice2 className="w-4 h-4 text-[#358F80] shrink-0" />
                 <span className="truncate">{espacio.edificio}</span>
               </div>
               <div className="flex items-center gap-1.5 justify-end">
-                <HiUsers className="w-4 h-4 text-[#008345] shrink-0" />
+                <HiUsers className="w-4 h-4 text-[#358F80] shrink-0" />
                 <span>Cap: {espacio.capacidad} pers.</span>
               </div>
             </div>
 
-            <p className="text-xs text-[#586663] leading-relaxed line-clamp-2">
+            <p className="text-xs text-[#52716B] leading-relaxed line-clamp-2">
               {espacio.descripcion}
             </p>
 
@@ -98,7 +98,7 @@ export const SpaceCard = ({ espacio, onReservar }) => {
               {espacio.equipamiento.slice(0, 3).map((eq, i) => (
                 <Chip
                   key={i}
-                  className="bg-[#F2F4EF] text-[#264743] font-bold text-[11px] border border-[#E0E4DC]"
+                  className="bg-[#F4FAF7] text-[#248277] font-bold text-[11px] border border-[#D8EAE2]"
                   radius="full"
                 >
                   {eq}
@@ -106,7 +106,7 @@ export const SpaceCard = ({ espacio, onReservar }) => {
               ))}
               {espacio.equipamiento.length > 3 && (
                 <Chip
-                  className="bg-[#E6F3EC] text-[#008345] font-bold text-[11px] border border-[#008345]/30"
+                  className="bg-[#EAF6F0] text-[#358F80] font-bold text-[11px] border border-[#358F80]/30"
                   radius="full"
                 >
                   +{espacio.equipamiento.length - 3} más
@@ -116,9 +116,9 @@ export const SpaceCard = ({ espacio, onReservar }) => {
           </div>
 
           {/* Card Action */}
-          <div className="pt-4 border-t border-[#E0E4DC] flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs text-[#586663] font-semibold">
-              <HiClock className="w-4 h-4 text-[#264743]" />
+          <div className="pt-4 border-t border-[#D8EAE2] flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs text-[#52716B] font-semibold">
+              <HiClock className="w-4 h-4 text-[#248277]" />
               <span>{espacio.horario}</span>
             </div>
 
@@ -127,8 +127,8 @@ export const SpaceCard = ({ espacio, onReservar }) => {
               disabled={espacio.estado !== 'disponible'}
               className={`rounded-full text-xs font-extrabold transition-all shadow-xs px-4 py-2 ${
                 espacio.estado === 'disponible'
-                  ? 'bg-[#162E2B] hover:bg-[#008345] text-white'
-                  : 'bg-[#E0E4DC] text-[#8A9693] cursor-not-allowed'
+                  ? 'bg-[#036666] hover:bg-[#358F80] text-white'
+                  : 'bg-[#D8EAE2] text-[#6A8881] cursor-not-allowed'
               }`}
             >
               <span>{espacio.estado === 'disponible' ? 'Reservar' : 'No disponible'}</span>

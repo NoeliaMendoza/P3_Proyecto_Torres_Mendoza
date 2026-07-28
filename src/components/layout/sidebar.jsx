@@ -1,113 +1,121 @@
 import { NavLink } from 'react-router-dom';
-import { 
-  HiSquares2X2, 
-  HiBuildingOffice2, 
-  HiMagnifyingGlass, 
-  HiUser, 
-  HiShieldCheck, 
+import { Avatar, Button, Chip } from '@heroui/react';
+import {
+  HiAcademicCap,
   HiArrowRightOnRectangle,
+  HiBuildingOffice2,
+  HiCalendarDays,
   HiChevronLeft,
-  HiAcademicCap
+  HiMagnifyingGlass,
+  HiShieldCheck,
+  HiSquares2X2,
+  HiUser,
 } from 'react-icons/hi2';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
+import { DEFAULT_PROFILE_AVATAR } from '../../constants/ui';
+
+const BASE_LINKS = [
+  { to: '/dashboard', label: 'Resumen', icon: HiSquares2X2 },
+  { to: '/espacios', label: 'Espacios académicos', icon: HiBuildingOffice2 },
+  { to: '/objetos-perdidos', label: 'Objetos perdidos', icon: HiMagnifyingGlass },
+  { to: '/perfil', label: 'Mi perfil', icon: HiUser },
+];
 
 export const Sidebar = () => {
   const { usuario, logout } = useAuthStore();
   const { sidebarOpen, toggleSidebar } = useUIStore();
-
-  const links = [
-    { to: '/dashboard', label: 'Dashboard', icon: HiSquares2X2 },
-    { to: '/espacios', label: 'Espacios Académicos', icon: HiBuildingOffice2 },
-    { to: '/objetos-perdidos', label: 'Objetos Perdidos', icon: HiMagnifyingGlass },
-    { to: '/perfil', label: 'Mi Perfil', icon: HiUser },
-  ];
-
-  if (usuario?.rol === 'admin') {
-    links.push({ to: '/admin/espacios', label: 'Gestión de Espacios', icon: HiShieldCheck });
-  }
+  const links = usuario?.rol === 'admin'
+    ? [
+        ...BASE_LINKS,
+        { to: '/admin/reservas', label: 'Gestión de reservas', icon: HiCalendarDays },
+        { to: '/admin/espacios', label: 'Administrar espacios', icon: HiShieldCheck },
+      ]
+    : BASE_LINKS;
 
   return (
     <aside
-      className={`fixed top-0 left-0 bottom-0 z-40 bg-[#122422] text-[#D1D9D6] flex flex-col transition-all duration-300 border-r border-[#1D3633] ${
+      className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-white/10 bg-[#036666] text-white shadow-[16px_0_40px_rgba(3,102,102,0.10)] transition-all duration-300 ${
         sidebarOpen ? 'w-64' : 'w-20'
       }`}
     >
-      {/* Brand Header */}
-      <div className="h-20 px-4 flex items-center justify-between border-b border-[#1D3633] bg-[#0E1B19]">
+      <div className="flex h-20 items-center justify-between border-b border-white/10 px-4">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-11 h-11 rounded-2xl bg-[#008345] flex items-center justify-center text-white font-extrabold text-xl shadow-md shrink-0 border border-emerald-400/30">
-            <HiAcademicCap className="w-6 h-6 text-white" />
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#99E2B4] text-[#036666] shadow-lg shadow-black/10">
+            <HiAcademicCap className="h-6 w-6" />
           </div>
           {sidebarOpen && (
             <div className="leading-none">
-              <span className="text-base font-extrabold tracking-tight text-white block font-heading">
-                ESPE<span className="text-[#36D080]">Connect</span>
+              <span className="block font-heading text-base font-extrabold tracking-tight">
+                ESPE<span className="text-[#99E2B4]">Connect</span>
               </span>
-              <span className="text-[10px] text-[#8EA09A] font-medium tracking-wide">
-                Univ. Fuerzas Armadas
-              </span>
+              <span className="text-[10px] font-medium tracking-wide text-[#C8E8D7]">Campus digital</span>
             </div>
           )}
         </div>
-        <button
-          onClick={toggleSidebar}
-          className="hidden md:flex p-2 rounded-full text-[#8EA09A] hover:text-white hover:bg-[#1D3633] transition-colors"
+        <Button
+          isIconOnly
+          variant="light"
+          onPress={toggleSidebar}
           aria-label="Alternar menú lateral"
+          className="hidden rounded-xl text-[#C8E8D7] hover:bg-white/10 hover:text-white md:flex"
         >
-          <HiChevronLeft className={`w-5 h-5 transition-transform ${sidebarOpen ? '' : 'rotate-180'}`} />
-        </button>
+          <HiChevronLeft className={`h-5 w-5 transition-transform ${sidebarOpen ? '' : 'rotate-180'}`} />
+        </Button>
       </div>
 
-      {/* User Quick Info */}
       {sidebarOpen && usuario && (
-        <div className="mx-3 mt-4 p-3.5 rounded-2xl bg-[#1A322F] border border-[#264743] flex items-center gap-3">
-          <img
-            src={usuario.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
-            alt={usuario.nombre}
-            className="w-10 h-10 rounded-full object-cover border-2 border-[#008345] shrink-0"
-          />
+        <div className="mx-3 mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 p-3">
+          <Avatar
+            className="h-10 w-10 shrink-0 bg-[#78C6A3] text-[#036666]"
+          >
+            <Avatar.Image
+              src={usuario.avatar || DEFAULT_PROFILE_AVATAR}
+              alt={`Foto de ${usuario.nombre}`}
+              className="object-cover"
+            />
+            <Avatar.Fallback className="text-xs font-extrabold">
+              {usuario.nombre?.split(' ').map((part) => part[0]).slice(0, 2).join('') || 'EC'}
+            </Avatar.Fallback>
+          </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-white truncate">{usuario.nombre}</p>
-            <span className="inline-block mt-0.5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#0D1D1B] text-[#36D080] border border-[#008345]/40">
+            <p className="truncate text-xs font-bold text-white">{usuario.nombre}</p>
+            <Chip size="sm" className="mt-1 h-5 bg-[#99E2B4] px-2 text-[9px] font-extrabold uppercase text-[#036666]">
               {usuario.rol || 'Estudiante'}
-            </span>
+            </Chip>
           </div>
         </div>
       )}
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-5 space-y-2 overflow-y-auto">
-        {links.map((link) => {
-          const Icon = link.icon;
-          return (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3.5 px-4 py-3 rounded-full font-bold text-xs transition-all ${
-                  isActive
-                    ? 'bg-[#008345] text-white shadow-lg shadow-[#008345]/20 font-extrabold'
-                    : 'text-[#9EB0AA] hover:text-white hover:bg-[#1A322F]'
-                }`
-              }
-            >
-              <Icon className="w-5 h-5 shrink-0" />
-              {sidebarOpen && <span className="truncate">{link.label}</span>}
-            </NavLink>
-          );
-        })}
+      <nav className="flex-1 space-y-1.5 overflow-y-auto px-3 py-5">
+        {links.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            title={!sidebarOpen ? label : undefined}
+            className={({ isActive }) =>
+              `flex items-center gap-3.5 rounded-2xl px-4 py-3 text-xs font-bold transition-all ${
+                isActive
+                  ? 'bg-white text-[#036666] shadow-lg shadow-black/10'
+                  : 'text-[#C8E8D7] hover:bg-white/10 hover:text-white'
+              }`
+            }
+          >
+            <Icon className="h-5 w-5 shrink-0" />
+            {sidebarOpen && <span className="truncate">{label}</span>}
+          </NavLink>
+        ))}
       </nav>
 
-      {/* Logout Footer */}
-      <div className="p-4 border-t border-[#1D3633] bg-[#0E1B19]">
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-3.5 px-4 py-3 rounded-full font-bold text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 transition-colors"
+      <div className="border-t border-white/10 p-4">
+        <Button
+          variant="light"
+          onPress={logout}
+          className="w-full justify-start rounded-2xl px-4 text-xs font-bold text-[#C8E8D7] hover:bg-white/10 hover:text-white"
+          startContent={<HiArrowRightOnRectangle className="h-5 w-5 shrink-0" />}
         >
-          <HiArrowRightOnRectangle className="w-5 h-5 shrink-0" />
-          {sidebarOpen && <span>Cerrar Sesión</span>}
-        </button>
+          {sidebarOpen && 'Cerrar sesión'}
+        </Button>
       </div>
     </aside>
   );

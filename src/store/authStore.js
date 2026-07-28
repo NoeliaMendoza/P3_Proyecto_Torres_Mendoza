@@ -1,20 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { MOCK_STUDENT_PROFILE } from '../data/mockData';
 
 export const useAuthStore = create(
   persist(
     (set) => ({
-      usuario: MOCK_STUDENT_PROFILE,
-      token: 'demo-espe-jwt-token',
-      isAuthenticated: true,
+      usuario: null,
+      token: null,
+      isAuthenticated: false,
 
       login: (usuario, token) => {
-        const userObj = usuario || MOCK_STUDENT_PROFILE;
-        const jwtToken = token || 'demo-espe-jwt-token';
-        localStorage.setItem('token', jwtToken);
-        localStorage.setItem('usuario', JSON.stringify(userObj));
-        set({ usuario: userObj, token: jwtToken, isAuthenticated: true });
+        if (!usuario || !token) throw new Error('La sesión recibida no es válida.');
+        localStorage.setItem('token', token);
+        localStorage.setItem('usuario', JSON.stringify(usuario));
+        set({ usuario, token, isAuthenticated: true });
       },
 
       logout: () => {

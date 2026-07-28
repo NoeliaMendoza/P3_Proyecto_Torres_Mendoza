@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   HiMagnifyingGlass, 
@@ -51,19 +51,19 @@ export const LostObjectsPages = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner & Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E0E4DC] pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#D8EAE2] pb-5">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#0F1A19] font-heading">
+          <h1 className="text-2xl font-extrabold text-[#123B38] font-heading">
             Objetos Perdidos y Encontrados
           </h1>
-          <p className="text-xs text-[#586663] font-semibold mt-1">
+          <p className="text-xs text-[#52716B] font-semibold mt-1">
             Red de apoyo universitario para la publicación y recuperación de bienes en el campus ESPE.
           </p>
         </div>
 
         <button
           onClick={() => setModalPublishOpen(true)}
-          className="px-6 py-3 rounded-full bg-[#008345] hover:bg-[#006636] text-white font-extrabold text-xs shadow-md shadow-[#008345]/20 flex items-center gap-2 transition-all shrink-0 self-start md:self-auto"
+          className="px-6 py-3 rounded-full bg-[#358F80] hover:bg-[#14746F] text-white font-extrabold text-xs shadow-md shadow-[#358F80]/20 flex items-center gap-2 transition-all shrink-0 self-start md:self-auto"
         >
           <HiPlus className="w-4 h-4" />
           Publicar Objeto
@@ -73,13 +73,13 @@ export const LostObjectsPages = () => {
       {/* Filter Tabs & Search Bar */}
       <div className="space-y-4">
         {/* Tabs Bar (Pill style) */}
-        <div className="flex items-center gap-2 border-b border-[#E0E4DC]">
+        <div className="flex items-center gap-2 border-b border-[#D8EAE2]">
           <button
             onClick={() => setActiveTab('todos')}
             className={`px-5 py-3 text-xs font-extrabold border-b-2 transition-all flex items-center gap-2 ${
               activeTab === 'todos'
-                ? 'border-[#008345] text-[#008345]'
-                : 'border-transparent text-[#586663] hover:text-[#0F1A19]'
+                ? 'border-[#358F80] text-[#358F80]'
+                : 'border-transparent text-[#52716B] hover:text-[#123B38]'
             }`}
           >
             <HiInboxStack className="w-4 h-4" /> Todos ({objetos.length})
@@ -89,7 +89,7 @@ export const LostObjectsPages = () => {
             className={`px-5 py-3 text-xs font-extrabold border-b-2 transition-all flex items-center gap-2 ${
               activeTab === 'perdidos'
                 ? 'border-rose-600 text-rose-600'
-                : 'border-transparent text-[#586663] hover:text-[#0F1A19]'
+                : 'border-transparent text-[#52716B] hover:text-[#123B38]'
             }`}
           >
             <HiExclamationTriangle className="w-4 h-4" /> Objetos Perdidos (
@@ -99,8 +99,8 @@ export const LostObjectsPages = () => {
             onClick={() => setActiveTab('encontrados')}
             className={`px-5 py-3 text-xs font-extrabold border-b-2 transition-all flex items-center gap-2 ${
               activeTab === 'encontrados'
-                ? 'border-[#008345] text-[#008345]'
-                : 'border-transparent text-[#586663] hover:text-[#0F1A19]'
+                ? 'border-[#358F80] text-[#358F80]'
+                : 'border-transparent text-[#52716B] hover:text-[#123B38]'
             }`}
           >
             <HiCheckBadge className="w-4 h-4" /> Objetos Encontrados (
@@ -109,24 +109,24 @@ export const LostObjectsPages = () => {
         </div>
 
         {/* Inputs & Category Filters */}
-        <div className="p-4 rounded-[28px] bg-white border border-[#E0E4DC] shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        <div className="p-4 rounded-[28px] bg-white border border-[#D8EAE2] shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           <div className="md:col-span-8 relative">
-            <HiMagnifyingGlass className="w-4 h-4 text-[#586663] absolute left-4 top-1/2 -translate-y-1/2" />
+            <HiMagnifyingGlass className="w-4 h-4 text-[#52716B] absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por objeto, ubicación o palabras clave..."
-              className="w-full pl-11 pr-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-full text-xs font-semibold text-[#0F1A19] focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345]"
+              className="w-full pl-11 pr-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-full text-xs font-semibold text-[#123B38] focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
             />
           </div>
 
           <div className="md:col-span-4 flex items-center gap-2">
-            <HiFunnel className="w-4 h-4 text-[#586663] shrink-0" />
+            <HiFunnel className="w-4 h-4 text-[#52716B] shrink-0" />
             <select
               value={selectedCategoria}
               onChange={(e) => setSelectedCategoria(e.target.value)}
-              className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-full text-xs font-bold text-[#0F1A19] focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345]"
+              className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-full text-xs font-bold text-[#123B38] focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
             >
               <option value="todas">Todas las Categorías</option>
               <option value="Electrónica">Electrónica</option>
@@ -141,15 +141,15 @@ export const LostObjectsPages = () => {
 
       {/* Grid Display */}
       {filteredObjetos.length === 0 ? (
-        <div className="py-16 text-center bg-white rounded-[32px] border border-[#E0E4DC] p-8 space-y-3">
-          <HiInboxStack className="w-12 h-12 text-[#8A9693] mx-auto" />
-          <h3 className="text-base font-extrabold text-[#0F1A19]">No hay publicaciones registradas</h3>
-          <p className="text-xs text-[#586663] max-w-sm mx-auto font-semibold">
+        <div className="py-16 text-center bg-white rounded-[32px] border border-[#D8EAE2] p-8 space-y-3">
+          <HiInboxStack className="w-12 h-12 text-[#6A8881] mx-auto" />
+          <h3 className="text-base font-extrabold text-[#123B38]">No hay publicaciones registradas</h3>
+          <p className="text-xs text-[#52716B] max-w-sm mx-auto font-semibold">
             No se encontraron objetos con los filtros especificados. ¿Deseas publicar uno nuevo?
           </p>
           <button
             onClick={() => setModalPublishOpen(true)}
-            className="px-5 py-2.5 rounded-full text-xs font-extrabold bg-[#008345] text-white shadow-xs"
+            className="px-5 py-2.5 rounded-full text-xs font-extrabold bg-[#358F80] text-white shadow-xs"
           >
             Publicar Objeto Ahora
           </button>

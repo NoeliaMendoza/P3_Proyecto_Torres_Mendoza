@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -34,13 +34,15 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
 
   const onSubmit = async (data) => {
     try {
-      await crearObjeto({
+      const result = await crearObjeto({
         ...data,
         imagen: imagePreview,
         reportante_nombre: usuario?.nombre || 'Estudiante ESPE'
       });
-      toast.success('¡Publicación creada exitosamente!', {
-        description: `El objeto "${data.nombre}" ha sido publicado correctamente en el portal.`
+      toast.success(result.queued ? 'Reporte guardado sin conexión' : '¡Publicación creada exitosamente!', {
+        description: result.queued
+          ? 'Se publicará automáticamente cuando recuperes la conexión.'
+          : `El objeto "${data.nombre}" ha sido publicado correctamente en el portal.`
       });
       reset();
       onClose();
@@ -67,7 +69,7 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-[#0E1E1C]/70 backdrop-blur-xs"
+          className="fixed inset-0 bg-[#024E50]/70 backdrop-blur-xs"
         />
 
         {/* Modal Window */}
@@ -75,10 +77,10 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative bg-white rounded-[32px] shadow-2xl border border-[#E0E4DC] w-full max-w-xl overflow-hidden z-10 max-h-[90vh] flex flex-col"
+          className="relative bg-white rounded-[32px] shadow-2xl border border-[#D8EAE2] w-full max-w-xl overflow-hidden z-10 max-h-[90vh] flex flex-col"
         >
           {/* Header */}
-          <div className="bg-[#162E2B] p-6 text-white relative shrink-0">
+          <div className="bg-[#036666] p-6 text-white relative shrink-0">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
@@ -86,11 +88,11 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
             >
               <HiXMark className="w-5 h-5" />
             </button>
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#008345]/30 text-[#36D080] border border-[#008345]/40 uppercase tracking-wider mb-2">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#358F80]/30 text-[#99E2B4] border border-[#358F80]/40 uppercase tracking-wider mb-2">
               Comunidad ESPEConnect
             </span>
             <h2 className="text-xl font-extrabold pr-6 leading-tight font-heading">Publicar Reporte de Objeto</h2>
-            <p className="text-xs text-[#9EB0AA] font-semibold mt-1">
+            <p className="text-xs text-[#C8E8D7] font-semibold mt-1">
               Registra un objeto perdido o encontrado para ayudar a reunirlo con su dueño.
             </p>
           </div>
@@ -99,7 +101,7 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4 overflow-y-auto flex-1">
             {/* Tipo (Radio Tabs) */}
             <div>
-              <label className="block text-xs font-bold text-[#0F1A19] mb-1.5">
+              <label className="block text-xs font-bold text-[#123B38] mb-1.5">
                 Tipo de Reporte
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -110,7 +112,7 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
                     {...register('tipo')}
                     className="peer sr-only"
                   />
-                  <div className="p-3.5 text-center rounded-full border border-[#E0E4DC] peer-checked:border-rose-600 peer-checked:bg-rose-50 peer-checked:text-rose-700 font-extrabold text-xs transition-all">
+                  <div className="p-3.5 text-center rounded-full border border-[#D8EAE2] peer-checked:border-rose-600 peer-checked:bg-rose-50 peer-checked:text-rose-700 font-extrabold text-xs transition-all">
                     He perdido un objeto
                   </div>
                 </label>
@@ -121,7 +123,7 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
                     {...register('tipo')}
                     className="peer sr-only"
                   />
-                  <div className="p-3.5 text-center rounded-full border border-[#E0E4DC] peer-checked:border-[#008345] peer-checked:bg-[#E6F3EC] peer-checked:text-[#008345] font-extrabold text-xs transition-all">
+                  <div className="p-3.5 text-center rounded-full border border-[#D8EAE2] peer-checked:border-[#358F80] peer-checked:bg-[#EAF6F0] peer-checked:text-[#358F80] font-extrabold text-xs transition-all">
                     He encontrado un objeto
                   </div>
                 </label>
@@ -130,14 +132,14 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
 
             {/* Nombre del objeto */}
             <div>
-              <label className="block text-xs font-bold text-[#0F1A19] mb-1.5">
+              <label className="block text-xs font-bold text-[#123B38] mb-1.5">
                 Nombre del Objeto
               </label>
               <input
                 type="text"
                 placeholder="Ejemplo: Calculadora Casio FX-991EX, Carnet de Estudiante..."
                 {...register('nombre', { required: 'El nombre es obligatorio' })}
-                className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-semibold text-[#0F1A19] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345]"
+                className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-2xl text-xs font-semibold text-[#123B38] focus:outline-none focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
               />
               {errors.nombre && (
                 <p className="text-[11px] text-rose-500 mt-1 font-semibold">{errors.nombre.message}</p>
@@ -147,12 +149,12 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
             {/* Categoría & Fecha */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-[#0F1A19] mb-1.5 flex items-center gap-1">
-                  <HiTag className="w-3.5 h-3.5 text-[#008345]" /> Categoría
+                <label className="block text-xs font-bold text-[#123B38] mb-1.5 flex items-center gap-1">
+                  <HiTag className="w-3.5 h-3.5 text-[#358F80]" /> Categoría
                 </label>
                 <select
                   {...register('categoria')}
-                  className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-bold text-[#0F1A19] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345]"
+                  className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-2xl text-xs font-bold text-[#123B38] focus:outline-none focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
                 >
                   <option value="Electrónica">Electrónica</option>
                   <option value="Documentos">Documentos</option>
@@ -163,27 +165,27 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#0F1A19] mb-1.5 flex items-center gap-1">
-                  <HiCalendar className="w-3.5 h-3.5 text-[#008345]" /> Fecha del suceso
+                <label className="block text-xs font-bold text-[#123B38] mb-1.5 flex items-center gap-1">
+                  <HiCalendar className="w-3.5 h-3.5 text-[#358F80]" /> Fecha del suceso
                 </label>
                 <input
                   type="date"
                   {...register('fecha', { required: 'Indique la fecha' })}
-                  className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-bold text-[#0F1A19] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345]"
+                  className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-2xl text-xs font-bold text-[#123B38] focus:outline-none focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
                 />
               </div>
             </div>
 
             {/* Lugar */}
             <div>
-              <label className="block text-xs font-bold text-[#0F1A19] mb-1.5 flex items-center gap-1">
-                <HiMapPin className="w-3.5 h-3.5 text-[#008345]" /> Ubicación en el Campus
+              <label className="block text-xs font-bold text-[#123B38] mb-1.5 flex items-center gap-1">
+                <HiMapPin className="w-3.5 h-3.5 text-[#358F80]" /> Ubicación en el Campus
               </label>
               <input
                 type="text"
                 placeholder="Ej. Biblioteca 2do Piso, Edificio G Aula 101, Cafetería Central..."
                 {...register('lugar', { required: 'Indique la ubicación aproximada' })}
-                className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-semibold text-[#0F1A19] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345]"
+                className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-2xl text-xs font-semibold text-[#123B38] focus:outline-none focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
               />
               {errors.lugar && (
                 <p className="text-[11px] text-rose-500 mt-1 font-semibold">{errors.lugar.message}</p>
@@ -192,17 +194,17 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
 
             {/* Image selection simulation */}
             <div>
-              <label className="block text-xs font-bold text-[#0F1A19] mb-1.5 flex items-center gap-1">
-                <HiPhoto className="w-3.5 h-3.5 text-[#008345]" /> Imagen del Objeto
+              <label className="block text-xs font-bold text-[#123B38] mb-1.5 flex items-center gap-1">
+                <HiPhoto className="w-3.5 h-3.5 text-[#358F80]" /> Imagen del Objeto
               </label>
               <div className="flex items-center gap-3">
                 <img
                   src={imagePreview}
                   alt="Vista previa"
-                  className="w-16 h-16 rounded-2xl object-cover border border-[#E0E4DC] shrink-0"
+                  className="w-16 h-16 rounded-2xl object-cover border border-[#D8EAE2] shrink-0"
                 />
                 <div className="flex-1 space-y-1">
-                  <p className="text-[11px] text-[#586663] font-semibold">Selecciona una imagen de demostración:</p>
+                  <p className="text-[11px] text-[#52716B] font-semibold">Selecciona una imagen de demostración:</p>
                   <div className="flex flex-wrap gap-1.5">
                     {sampleImages.map((img, i) => (
                       <button
@@ -211,8 +213,8 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
                         onClick={() => setImagePreview(img.url)}
                         className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${
                           imagePreview === img.url
-                            ? 'bg-[#008345] text-white border-[#008345]'
-                            : 'bg-[#F2F4EF] text-[#264743] border-[#E0E4DC] hover:bg-[#E2E6DF]'
+                            ? 'bg-[#358F80] text-white border-[#358F80]'
+                            : 'bg-[#F4FAF7] text-[#248277] border-[#D8EAE2] hover:bg-[#E1F1E9]'
                         }`}
                       >
                         {img.label}
@@ -225,14 +227,14 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
 
             {/* Descripción */}
             <div>
-              <label className="block text-xs font-bold text-[#0F1A19] mb-1.5">
+              <label className="block text-xs font-bold text-[#123B38] mb-1.5">
                 Descripción Detallada
               </label>
               <textarea
                 rows={3}
                 placeholder="Indica detalles particulares como marcas, color de funda, distintivos o contenidos para verificar propiedad..."
                 {...register('descripcion', { required: 'Añada una breve descripción' })}
-                className="w-full px-4 py-2.5 bg-[#F2F4EF] border border-[#E0E4DC] rounded-2xl text-xs font-semibold text-[#0F1A19] placeholder-[#8A9693] focus:outline-none focus:ring-2 focus:ring-[#008345]/30 focus:border-[#008345] resize-none"
+                className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-2xl text-xs font-semibold text-[#123B38] placeholder-[#6A8881] focus:outline-none focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80] resize-none"
               />
               {errors.descripcion && (
                 <p className="text-[11px] text-rose-500 mt-1 font-semibold">{errors.descripcion.message}</p>
@@ -240,18 +242,18 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
             </div>
 
             {/* Footer buttons */}
-            <div className="pt-4 border-t border-[#E0E4DC] flex items-center justify-end gap-3 shrink-0">
+            <div className="pt-4 border-t border-[#D8EAE2] flex items-center justify-end gap-3 shrink-0">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-full text-xs font-extrabold text-[#586663] hover:bg-[#F2F4EF] transition-colors"
+                className="px-5 py-2.5 rounded-full text-xs font-extrabold text-[#52716B] hover:bg-[#F4FAF7] transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2.5 rounded-full text-xs font-extrabold bg-[#008345] hover:bg-[#006636] text-white shadow-md shadow-[#008345]/20 flex items-center gap-2 transition-all"
+                className="px-6 py-2.5 rounded-full text-xs font-extrabold bg-[#358F80] hover:bg-[#14746F] text-white shadow-md shadow-[#358F80]/20 flex items-center gap-2 transition-all"
               >
                 <HiArrowUpTray className="w-4 h-4" />
                 {isSubmitting ? 'Publicando...' : 'Publicar Objeto'}
