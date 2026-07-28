@@ -18,7 +18,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'icons/*.png', 'push-handler.js'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icons/*.png', 'push-handler.js'],
       workbox: {
         navigateFallback: '/index.html',
         importScripts: ['/push-handler.js'],
