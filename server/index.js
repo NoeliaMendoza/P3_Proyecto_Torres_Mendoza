@@ -26,6 +26,9 @@ app.use('/objetos-perdidos', require('./routes/objetos.routes'));
 app.use('/reservas', require('./routes/reservas.routes'));
 app.use('/push', require('./routes/push.routes'));
 app.use('/ai', require('./routes/ai.routes'));
+app.use('/notificaciones', require('./routes/notificaciones.routes'));
+app.use('/matriculas', require('./routes/matriculas.routes'));
+
 
 const start = async () => {
   try {

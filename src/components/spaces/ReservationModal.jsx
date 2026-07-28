@@ -1,4 +1,6 @@
-﻿import { useForm } from 'react-hook-form';
+﻿import { useState, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   HiXMark, 
@@ -7,19 +9,62 @@ import {
   HiAcademicCap, 
   HiBuildingOffice2, 
   HiCheckCircle,
-  HiUsers
+  HiUsers,
+  HiExclamationTriangle
 } from 'react-icons/hi2';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { reservarEspacio } from '../../services/espacios.services';
+import api from '../../api/axios';
+
+const DIAS_MAP = { 0: null, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: null };
+
+const obtenerDisponibilidad = async (id) => (await api.get(`/espacios/${id}/disponibilidad`)).data;
 
 export const ReservationModal = ({ espacio, isOpen, onClose }) => {
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
+  const [fechaSel, setFechaSel] = useState(new Date().toISOString().split('T')[0]);
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch } = useForm({
     defaultValues: {
       fecha: new Date().toISOString().split('T')[0],
       horario: '14:00 - 16:00',
       motivo: ''
     }
   });
+
+  const { data: disponibilidad } = useQuery({
+    queryKey: ['disponibilidad', espacio?.id],
+    queryFn: () => obtenerDisponibilidad(espacio.id),
+    enabled: isOpen && !!espacio?.id,
+  });
+
+  const fechaWatch = watch('fecha');
+  const horarioWatch = watch('horario');
+
+  const diaSemana = useMemo(() => {
+    if (!fechaWatch) return null;
+    const d = new Date(fechaWatch + 'T12:00:00').getDay();
+    return DIAS_MAP[d];
+  }, [fechaWatch]);
+
+  const [horaInicio, horaFin] = horarioWatch ? horarioWatch.split(' - ') : ['', ''];
+
+  const ocupado = useMemo(() => {
+    if (!diaSemana || !disponibilidad?.horarios) return false;
+    return disponibilidad.horarios.some((h) =>
+      h.dia_semana === diaSemana &&
+      h.hora_inicio.slice(0, 5) === horaInicio &&
+      h.hora_fin.slice(0, 5) === horaFin
+    );
+  }, [diaSemana, horaInicio, horaFin, disponibilidad]);
+
+  const clasesEnFranja = useMemo(() => {
+    if (!diaSemana || !disponibilidad?.horarios) return [];
+    return disponibilidad.horarios.filter((h) =>
+      h.dia_semana === diaSemana &&
+      h.hora_inicio.slice(0, 5) === horaInicio &&
+      h.hora_fin.slice(0, 5) === horaFin
+    );
+  }, [diaSemana, horaInicio, horaFin, disponibilidad]);
 
   if (!isOpen || !espacio) return null;
 
@@ -30,10 +75,10 @@ export const ReservationModal = ({ espacio, isOpen, onClose }) => {
         espacioNombre: espacio.nombre,
         ...data
       });
-      toast.success(result.queued ? 'Reserva guardada sin conexión' : '¡Reserva registrada con éxito!', {
+      toast.success(result.queued ? 'Reserva guardada sin conexión' : '¡Reserva solicitada con éxito!', {
         description: result.queued
           ? 'Se enviará automáticamente cuando recuperes la conexión.'
-          : `Tu espacio ${espacio.nombre} ha sido reservado para el ${data.fecha} (${data.horario}).`
+          : `Tu espacio ${espacio.nombre} ha sido solicitado para el ${data.fecha} (${data.horario}). Pendiente de aprobación.`
       });
       reset();
       onClose();
@@ -48,9 +93,8 @@ export const ReservationModal = ({ espacio, isOpen, onClose }) => {
     '07:00 - 09:00',
     '09:00 - 11:00',
     '11:00 - 13:00',
-    '14:00 - 16:00',
-    '16:00 - 18:00',
-    '18:00 - 20:00'
+    '13:00 - 15:00',
+    '15:00 - 17:00'
   ];
 
   return (
@@ -107,6 +151,7 @@ export const ReservationModal = ({ espacio, isOpen, onClose }) => {
                 type="date"
                 min={new Date().toISOString().split('T')[0]}
                 {...register('fecha', { required: 'La fecha es obligatoria' })}
+                onChange={(e) => setFechaSel(e.target.value)}
                 className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-2xl text-xs font-bold text-[#123B38] focus:outline-none focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
               />
               {errors.fecha && (
@@ -120,17 +165,69 @@ export const ReservationModal = ({ espacio, isOpen, onClose }) => {
                 <HiClock className="w-4 h-4 text-[#358F80]" />
                 Franja Horaria
               </label>
-              <select
-                {...register('horario', { required: 'Seleccione un horario' })}
-                className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-2xl text-xs font-bold text-[#123B38] focus:outline-none focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
-              >
-                {horariosDisponibles.map((h) => (
-                  <option key={h} value={h}>
-                    {h}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-1.5">
+                {horariosDisponibles.map((h) => {
+                  const [hi, hf] = h.split(' - ');
+                  const ocup = disponibilidad?.horarios?.some((h2) =>
+                    h2.dia_semana === diaSemana &&
+                    h2.hora_inicio.slice(0, 5) === hi &&
+                    h2.hora_fin.slice(0, 5) === hf
+                  );
+                  return (
+                    <label
+                      key={h}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border text-xs font-bold cursor-pointer transition-colors ${
+                        horarioWatch === h
+                          ? ocup
+                            ? 'border-rose-300 bg-rose-50 text-rose-700'
+                            : 'border-[#358F80] bg-[#EAF6F0] text-[#123B38]'
+                          : ocup
+                            ? 'border-[#E8D8D8] bg-[#FDF5F5] text-[#6A8881] line-through'
+                            : 'border-[#D8EAE2] bg-[#F4FAF7] text-[#123B38] hover:bg-[#EAF6F0]'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        value={h}
+                        disabled={ocup}
+                        {...register('horario', { required: 'Seleccione un horario' })}
+                        className="accent-[#358F80]"
+                      />
+                      <span className="flex-1">{h}</span>
+                      {ocup && (
+                        <span className="flex items-center gap-1 text-[10px] text-rose-500 font-extrabold">
+                          <HiExclamationTriangle className="w-3.5 h-3.5" />
+                          Ocupado
+                        </span>
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
             </div>
+
+            {ocupado && (
+              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3">
+                <p className="text-[11px] font-bold text-rose-700 flex items-center gap-1.5">
+                  <HiExclamationTriangle className="w-4 h-4" />
+                  Este espacio tiene clases en este horario
+                </p>
+                <div className="mt-1.5 space-y-1">
+                  {clasesEnFranja.map((c, i) => (
+                    <p key={i} className="text-[10px] text-rose-600 font-semibold">
+                      {c.asignatura} — {c.docente}
+                    </p>
+                  ))}
+                </div>
+                <Link
+                  to={`/horarios`}
+                  className="mt-2 inline-flex items-center gap-1 text-[10px] font-extrabold text-[#14746F] hover:underline"
+                >
+                  <HiClock className="w-3 h-3" />
+                  Ver horario general
+                </Link>
+              </div>
+            )}
 
             {/* Motivo Area */}
             <div>

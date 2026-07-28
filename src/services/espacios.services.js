@@ -13,7 +13,7 @@ export const obtenerEspacios = async (params) => {
       espacios = espacios.filter((e) =>
         e.nombre.toLowerCase().includes(q) || e.edificio.toLowerCase().includes(q));
     }
-    if (params?.tipo && params.tipo !== 'todos') espacios = espacios.filter((e) => e.tipo === params.tipo);
+    if (params?.tipo && params.tipo !== 'todos') espacios = espacios.filter((e) => (e.tipo_espacio || e.tipo) === params.tipo);
     return espacios;
   }
 };

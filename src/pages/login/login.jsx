@@ -16,7 +16,7 @@ import {
   HiXMark,
 } from 'react-icons/hi2';
 import { toast } from 'sonner';
-import { login, recperarPasswordService, registerUser } from '../../services/auth.services';
+import { login, recperarPasswordService, registerUser, obtenerContextoUsuario } from '../../services/auth.services';
 import { useAuthStore } from '../../store/authStore';
 import { PasswordRequirements } from '../../components/auth/PasswordRequirements';
 import { validateRegistration } from '../../validation/registration';
@@ -80,6 +80,7 @@ export const LoginPages = () => {
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const navigate = useNavigate();
   const saveSession = useAuthStore((state) => state.login);
+  const setContexto = useAuthStore((state) => state.setContexto);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -87,6 +88,7 @@ export const LoginPages = () => {
     try {
       const data = await login(correo, password);
       saveSession(data.usuario, data.token);
+      try { const ctx = await obtenerContextoUsuario(); setContexto(ctx); } catch (_) {}
       toast.success('Bienvenido a ESPEConnect', {
         description: `Sesión iniciada como ${data.usuario.nombre}`,
       });
@@ -158,9 +160,9 @@ export const LoginPages = () => {
   };
 
   const useDemo = (role) => {
-    const isAdmin = role === 'admin';
-    setCorreo(isAdmin ? 'admin@espe.edu.ec' : 'ceandrade@espe.edu.ec');
-    setPassword(isAdmin ? 'admin2026' : 'espe2026');
+    if (role === 'admin') { setCorreo('admin@espe.edu.ec'); setPassword('admin2026'); }
+    else if (role === 'docente') { setCorreo('kjchuquitarko@espe.edu.ec'); setPassword('docente2026'); }
+    else { setCorreo('ceandrade@espe.edu.ec'); setPassword('espe2026'); }
   };
 
   const changeMode = (nextMode) => {
@@ -311,7 +313,7 @@ export const LoginPages = () => {
                       <div>
                         <Checkbox
                           isSelected={acceptedTerms}
-                          onValueChange={(selected) => {
+                          onChange={(selected) => {
                             setAcceptedTerms(selected);
                             setRegisterErrors((current) => ({ ...current, acceptedTerms: undefined }));
                           }}
@@ -333,7 +335,7 @@ export const LoginPages = () => {
                     <div className="flex items-center justify-between gap-3">
                       <Checkbox
                         isSelected={recordarme}
-                        onValueChange={setRecordarme}
+                        onChange={setRecordarme}
                         classNames={{ label: 'text-xs text-[#52716B]' }}
                       >
                         Recordarme
@@ -377,23 +379,31 @@ export const LoginPages = () => {
             </div>
 
             {mode === 'login' && <div className="mt-4">
-              <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-wider text-[#6A8881]">Accesos de demostración</p>
-              <div className="grid grid-cols-2 gap-3">
+              <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-wider text-[#6A8881]">Acceso rápido</p>
+              <div className="grid grid-cols-3 gap-2">
                 <Button
                   variant="flat"
                   onPress={() => useDemo('student')}
-                  className="rounded-2xl bg-[#EAF6F0] text-xs font-bold text-[#036666]"
-                  startContent={<HiAcademicCap className="h-4 w-4" />}
+                  className="rounded-2xl bg-[#EAF6F0] text-[10px] font-bold text-[#036666] h-auto py-2"
+                  startContent={<HiAcademicCap className="h-4 w-4 shrink-0" />}
                 >
                   Estudiante
                 </Button>
                 <Button
                   variant="flat"
-                  onPress={() => useDemo('admin')}
-                  className="rounded-2xl bg-[#EAF6F0] text-xs font-bold text-[#036666]"
-                  startContent={<HiShieldCheck className="h-4 w-4" />}
+                  onPress={() => useDemo('docente')}
+                  className="rounded-2xl bg-[#EAF6F0] text-[10px] font-bold text-[#036666] h-auto py-2"
+                  startContent={<HiUser className="h-4 w-4 shrink-0" />}
                 >
-                  Administrador
+                  Docente
+                </Button>
+                <Button
+                  variant="flat"
+                  onPress={() => useDemo('admin')}
+                  className="rounded-2xl bg-[#EAF6F0] text-[10px] font-bold text-[#036666] h-auto py-2"
+                  startContent={<HiShieldCheck className="h-4 w-4 shrink-0" />}
+                >
+                  Admin
                 </Button>
               </div>
             </div>}

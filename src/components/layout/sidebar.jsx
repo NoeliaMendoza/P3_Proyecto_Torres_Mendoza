@@ -13,10 +13,13 @@ import {
 } from 'react-icons/hi2';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
-import { DEFAULT_PROFILE_AVATAR } from '../../constants/ui';
+import { getAvatarUrl } from '../../constants/ui';
+
+import { HiClock } from 'react-icons/hi2';
 
 const BASE_LINKS = [
   { to: '/dashboard', label: 'Resumen', icon: HiSquares2X2 },
+  { to: '/horarios', label: 'Mi horario', icon: HiClock },
   { to: '/espacios', label: 'Espacios académicos', icon: HiBuildingOffice2 },
   { to: '/objetos-perdidos', label: 'Objetos perdidos', icon: HiMagnifyingGlass },
   { to: '/perfil', label: 'Mi perfil', icon: HiUser },
@@ -70,7 +73,7 @@ export const Sidebar = () => {
             className="h-10 w-10 shrink-0 bg-[#78C6A3] text-[#036666]"
           >
             <Avatar.Image
-              src={usuario.avatar || DEFAULT_PROFILE_AVATAR}
+              src={usuario.avatar || getAvatarUrl(usuario.nombre)}
               alt={`Foto de ${usuario.nombre}`}
               className="object-cover"
             />

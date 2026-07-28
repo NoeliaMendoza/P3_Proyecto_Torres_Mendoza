@@ -15,8 +15,13 @@ export const subscribeToPush = async () => {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     throw new Error('Este navegador no admite notificaciones push.');
   }
-  const permission = await Notification.requestPermission();
-  if (permission !== 'granted') throw new Error('Permiso de notificaciones denegado.');
+  if (Notification.permission === 'denied') {
+    throw new Error('Permiso denegado permanentemente. Actívalo manualmente en la configuración del navegador (🔒 junto a la URL).');
+  }
+  if (Notification.permission !== 'granted') {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') throw new Error('Permiso de notificaciones denegado.');
+  }
   const { data } = await api.get('/push/public-key');
   const registration = await navigator.serviceWorker.ready;
   const subscription = await registration.pushManager.subscribe({

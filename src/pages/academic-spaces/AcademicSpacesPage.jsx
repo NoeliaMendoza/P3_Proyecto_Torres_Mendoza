@@ -1,5 +1,6 @@
-﻿import { useState, useMemo } from 'react';
+﻿import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
   HiBuildingOffice2, 
@@ -12,6 +13,7 @@ import {
   HiWrenchScrewdriver
 } from 'react-icons/hi2';
 import { useUIStore } from '../../store/uiStore';
+import { obtenerEspacios } from '../../services/espacios.services';
 import { SpaceCard } from '../../components/spaces/SpaceCard';
 import { ReservationModal } from '../../components/spaces/ReservationModal';
 
@@ -19,8 +21,15 @@ export const AcademicSpacesPages = () => {
   const [searchParams] = useSearchParams();
   const initialSearch = searchParams.get('search') || '';
 
-  const { espacios } = useUIStore();
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
+  const { espacios, setEspacios } = useUIStore();
+  const { data: espaciosAPI, isLoading } = useQuery({
+    queryKey: ['espacios'],
+    queryFn: obtenerEspacios,
+    staleTime: 60000,
+  });
+  useEffect(() => { if (espaciosAPI) setEspacios(espaciosAPI); }, [espaciosAPI, setEspacios]);
+
+  const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedTipo, setSelectedTipo] = useState('todos');
   const [selectedEstado, setSelectedEstado] = useState('todos');
@@ -31,10 +40,10 @@ export const AcademicSpacesPages = () => {
   const filteredEspacios = useMemo(() => {
     return espacios.filter((e) => {
       const matchSearch =
-        e.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.edificio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchTipo = selectedTipo === 'todos' || e.tipo === selectedTipo;
+        (e.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (e.codigo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (e.edificio || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchTipo = selectedTipo === 'todos' || (e.tipo_espacio || '') === selectedTipo;
       const matchEstado = selectedEstado === 'todos' || e.estado === selectedEstado;
       return matchSearch && matchTipo && matchEstado;
     });
@@ -106,11 +115,9 @@ export const AcademicSpacesPages = () => {
             className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-full text-xs font-bold text-[#123B38] focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
           >
             <option value="todos">Todos los Tipos</option>
+            <option value="Aula">Aulas</option>
             <option value="Laboratorio">Laboratorios</option>
-            <option value="Auditorio">Auditorios</option>
-            <option value="Aula">Aulas Inteligentes</option>
-            <option value="Sala de Estudio">Salas de Estudio</option>
-            <option value="Sala de Reuniones">Salas de Reuniones</option>
+            <option value="Virtual">Virtual</option>
           </select>
         </div>
 
@@ -151,10 +158,10 @@ export const AcademicSpacesPages = () => {
             <table className="w-full text-left text-xs text-[#123B38]">
               <thead className="bg-[#F4FAF7] border-b border-[#D8EAE2] font-extrabold uppercase tracking-wider text-[10px] text-[#52716B]">
                 <tr>
-                  <th className="px-6 py-4">Espacio / Ubicación</th>
+                  <th className="px-6 py-4">Código / Espacio</th>
                   <th className="px-6 py-4">Tipo</th>
+                  <th className="px-6 py-4">Ubicación</th>
                   <th className="px-6 py-4">Capacidad</th>
-                  <th className="px-6 py-4">Horario</th>
                   <th className="px-6 py-4">Estado</th>
                   <th className="px-6 py-4 text-right">Acción</th>
                 </tr>
@@ -164,24 +171,19 @@ export const AcademicSpacesPages = () => {
                   <tr key={e.id} className="hover:bg-[#F4FAF7]/60 transition-colors">
                     <td className="px-6 py-4 font-bold text-[#123B38]">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={e.imagen}
-                          alt={e.nombre}
-                          className="w-10 h-10 rounded-2xl object-cover border border-[#D8EAE2] shrink-0"
-                        />
-                        <div>
-                          <p className="font-extrabold text-[#123B38] leading-tight">{e.nombre}</p>
-                          <p className="text-[11px] text-[#52716B] font-semibold">{e.edificio}</p>
-                        </div>
+                        <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#F4FAF7] text-[#248277] border border-[#D8EAE2]">
+                          {e.codigo}
+                        </span>
+                        <span className="font-extrabold">{e.nombre}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#F4FAF7] text-[#248277] border border-[#D8EAE2]">
-                        {e.tipo}
+                        {e.tipo_espacio}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-semibold">{e.capacidad} personas</td>
-                    <td className="px-6 py-4 text-[#52716B] font-semibold">{e.horario}</td>
+                    <td className="px-6 py-4 text-[#52716B] font-semibold">{e.edificio} {e.piso ? `Piso ${e.piso}` : ''}</td>
+                    <td className="px-6 py-4 font-semibold">{e.capacidad} pers.</td>
                     <td className="px-6 py-4">
                       {e.estado === 'disponible' ? (
                         <span className="inline-flex items-center gap-1 text-[#358F80] font-extrabold">

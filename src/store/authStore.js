@@ -7,6 +7,7 @@ export const useAuthStore = create(
       usuario: null,
       token: null,
       isAuthenticated: false,
+      contexto: null,
 
       login: (usuario, token) => {
         if (!usuario || !token) throw new Error('La sesión recibida no es válida.');
@@ -18,17 +19,20 @@ export const useAuthStore = create(
       logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
-        set({ usuario: null, token: null, isAuthenticated: false });
+        set({ usuario: null, token: null, isAuthenticated: false, contexto: null });
       },
 
-      setUsuario: (usuario) => set({ usuario })
+      setUsuario: (usuario) => set({ usuario }),
+
+      setContexto: (contexto) => set({ contexto })
     }),
     {
       name: 'espe-auth',
       partialize: (state) => ({
         usuario: state.usuario,
         token: state.token,
-        isAuthenticated: state.isAuthenticated
+        isAuthenticated: state.isAuthenticated,
+        contexto: state.contexto
       })
     }
   )

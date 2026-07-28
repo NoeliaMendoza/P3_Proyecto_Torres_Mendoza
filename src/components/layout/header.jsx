@@ -12,7 +12,7 @@ import {
 } from 'react-icons/hi2';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
-import { DEFAULT_PROFILE_AVATAR } from '../../constants/ui';
+import { getAvatarUrl } from '../../constants/ui';
 
 const PAGE_TITLES = {
   '/dashboard': ['Resumen', 'Tu actividad universitaria'],
@@ -104,7 +104,7 @@ export const Header = () => {
                 className="h-7 w-7 bg-[#78C6A3] text-[#036666]"
               >
                 <Avatar.Image
-                  src={usuario?.avatar || DEFAULT_PROFILE_AVATAR}
+                  src={usuario?.avatar || getAvatarUrl(usuario?.nombre)}
                   alt={`Foto de ${usuario?.nombre || 'usuario ESPE'}`}
                   className="object-cover"
                 />

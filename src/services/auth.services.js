@@ -14,3 +14,8 @@ export const recperarPasswordService = async (correo) => {
   const response = await api.post('/auth/recuperar-password', { correo });
   return response.data;
 };
+
+export const obtenerContextoUsuario = async () => {
+  const response = await api.get('/auth/me/contexto');
+  return response.data;
+};

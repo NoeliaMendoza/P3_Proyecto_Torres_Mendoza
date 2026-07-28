@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import { Toaster } from "sonner";
 import { Layout } from "./components/layout";
 import { PWAStatus } from "./components/common/PWAStatus";
@@ -14,6 +15,7 @@ const LostObjectsPages = lazy(() => import("./pages/lost-objects").then((module)
 const AdminSpacesPages = lazy(() => import("./pages/admin-spaces").then((module) => ({ default: module.AdminSpacesPages })));
 const AdminReservationsPage = lazy(() => import("./pages/admin-reservations").then((module) => ({ default: module.AdminReservationsPage })));
 const ProfilePage = lazy(() => import("./pages/profile/profile").then((module) => ({ default: module.ProfilePage })));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {

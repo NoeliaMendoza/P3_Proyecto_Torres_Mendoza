@@ -1,6 +1,7 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, CardContent, Chip } from '@heroui/react';
+import { useQuery } from '@tanstack/react-query';
+import { Button, Card, CardContent } from '@heroui/react';
 import { 
   HiBuildingOffice2, 
   HiMagnifyingGlass, 
@@ -15,13 +16,38 @@ import {
 } from 'react-icons/hi2';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
+import { obtenerEspacios } from '../../services/espacios.services';
+import { obtenerMisReservas } from '../../services/reservas.services';
+import { obtenerContextoUsuario } from '../../services/auth.services';
 import { SpaceCard } from '../../components/spaces/SpaceCard';
 import { ReservationModal } from '../../components/spaces/ReservationModal';
 
 export const DashboardPages = () => {
   const usuario = useAuthStore((s) => s.usuario);
-  const { espacios, objetos, reservas, notificaciones } = useUIStore();
+  const contexto = useAuthStore((s) => s.contexto);
+  const setContexto = useAuthStore((s) => s.setContexto);
+  const { espacios, objetos, reservas, notificaciones, setEspacios, setReservas } = useUIStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!contexto && usuario) {
+      obtenerContextoUsuario().then(setContexto).catch(() => {});
+    }
+  }, [contexto, usuario, setContexto]);
+
+  const { data: espaciosAPI } = useQuery({
+    queryKey: ['espacios'],
+    queryFn: obtenerEspacios,
+    staleTime: 60000,
+  });
+  const { data: reservasAPI } = useQuery({
+    queryKey: ['reservas', 'mis'],
+    queryFn: obtenerMisReservas,
+    staleTime: 30000,
+  });
+
+  useEffect(() => { if (espaciosAPI) setEspacios(espaciosAPI); }, [espaciosAPI, setEspacios]);
+  useEffect(() => { if (reservasAPI) setReservas(reservasAPI); }, [reservasAPI, setReservas]);
 
   const [selectedSpace, setSelectedSpace] = useState(null);
   const [modalReservationOpen, setModalReservationOpen] = useState(false);
@@ -76,17 +102,11 @@ export const DashboardPages = () => {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-3">
-            <Chip
-              startContent={<HiSparkles className="h-4 w-4" />}
-              className="border border-white/10 bg-white/10 px-3 text-xs font-extrabold text-[#99E2B4]"
-            >
-              Campus Matriz · Sangolquí
-            </Chip>
             <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight font-heading leading-tight">
               Bienvenido, {usuario?.nombre || 'Estudiante'}
             </h1>
             <p className="text-xs md:text-sm text-[#D1D9D6] max-w-2xl leading-relaxed font-semibold">
-              {usuario?.carrera || 'Ingeniería en Software'} &bull; {usuario?.semestre || '7mo Semestre'} &bull; Promedio: <span className="font-extrabold text-[#99E2B4]">{usuario?.promedio || '18.85 / 20'}</span>
+              {contexto?.carrera?.nombre || 'Carrera'} &bull; {contexto?.nivel_pao ? `PAO ${contexto.nivel_pao}` : ''} &bull; Sede {contexto?.campus || 'Santo Domingo'}
             </p>
           </div>
 

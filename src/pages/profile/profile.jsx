@@ -1,5 +1,6 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
   HiUser, 
@@ -15,22 +16,37 @@ import {
 } from 'react-icons/hi2';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../store/authStore';
-import { DEFAULT_PROFILE_AVATAR } from '../../constants/ui';
 import { useUIStore } from '../../store/uiStore';
+import { obtenerMisReservas } from '../../services/reservas.services';
+import { obtenerContextoUsuario } from '../../services/auth.services';
 
 export const ProfilePage = () => {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'info';
 
   const usuario = useAuthStore((s) => s.usuario);
+  const contexto = useAuthStore((s) => s.contexto);
+  const setContexto = useAuthStore((s) => s.setContexto);
   const setUsuario = useAuthStore((s) => s.setUsuario);
-  const { reservas, objetos } = useUIStore();
+  const { reservas, objetos, setReservas } = useUIStore();
+
+  const { data: reservasAPI } = useQuery({
+    queryKey: ['reservas', 'mis'],
+    queryFn: obtenerMisReservas,
+    staleTime: 30000,
+  });
+  useEffect(() => { if (reservasAPI) setReservas(reservasAPI); }, [reservasAPI, setReservas]);
+  useEffect(() => {
+    if (!contexto && usuario) {
+      obtenerContextoUsuario().then(setContexto).catch(() => {});
+    }
+  }, [contexto, usuario, setContexto]);
 
   const [activeTab, setActiveTab] = useState(initialTab); // 'info' | 'reservas' | 'objetos' | 'config'
 
   // Form edit state
   const [editNombre, setEditNombre] = useState(usuario?.nombre || '');
-  const [editTelefono, setEditTelefono] = useState(usuario?.telefono || '+593 99 876 5432');
+  const [editTelefono, setEditTelefono] = useState(usuario?.telefono || '');
   const [notifEmail, setNotifEmail] = useState(true);
 
   const handleSaveProfile = (e) => {
@@ -59,7 +75,7 @@ export const ProfilePage = () => {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 sm:-mt-14 mb-4">
             <div className="flex flex-col sm:flex-row sm:items-end gap-4">
               <img
-                src={usuario?.avatar || DEFAULT_PROFILE_AVATAR}
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(usuario?.nombre || 'User')}&background=036666&color=fff&size=128`}
                 alt={usuario?.nombre}
                 className="w-28 h-28 rounded-[28px] object-cover border-4 border-white shadow-xl ring-2 ring-[#358F80]/40"
               />
@@ -69,17 +85,14 @@ export const ProfilePage = () => {
                   <HiCheckCircle className="w-5 h-5 text-[#358F80]" />
                 </h1>
                 <p className="text-xs font-extrabold text-[#358F80] flex items-center gap-1.5">
-                  <HiAcademicCap className="w-4 h-4" /> {usuario?.carrera} &bull; {usuario?.semestre}
+                  <HiAcademicCap className="w-4 h-4" /> {contexto?.carrera?.nombre || 'Tecnología de la Información'} {contexto?.nivel_pao ? `· PAO ${contexto.nivel_pao}` : ''}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               <span className="px-4 py-1.5 rounded-full text-xs font-extrabold bg-[#EAF6F0] text-[#358F80] border border-[#358F80]/30">
-                ID: {usuario?.idEspe || 'L00394857'}
-              </span>
-              <span className="px-4 py-1.5 rounded-full text-xs font-extrabold bg-[#036666] text-white">
-                Promedio: {usuario?.promedio || '18.85'}
+                {contexto?.usuario?.codigo_estudiante || (usuario?.rol === 'docente' ? 'Docente' : '')}
               </span>
             </div>
           </div>
@@ -140,16 +153,16 @@ export const ProfilePage = () => {
             </h3>
             <div className="space-y-3 text-xs">
               <div className="p-3.5 rounded-2xl bg-[#F4FAF7] border border-[#D8EAE2]">
-                <span className="text-[#52716B] font-bold block text-[10px] uppercase">Departamento</span>
-                <span className="font-extrabold text-[#123B38]">{usuario?.departamento}</span>
+                <span className="text-[#52716B] font-bold block text-[10px] uppercase">Carrera</span>
+                <span className="font-extrabold text-[#123B38]">{contexto?.carrera?.nombre || 'Tecnología de la Información'}</span>
               </div>
               <div className="p-3.5 rounded-2xl bg-[#F4FAF7] border border-[#D8EAE2]">
-                <span className="text-[#52716B] font-bold block text-[10px] uppercase">Campus Principal</span>
-                <span className="font-extrabold text-[#123B38]">{usuario?.campus}</span>
+                <span className="text-[#52716B] font-bold block text-[10px] uppercase">Sede</span>
+                <span className="font-extrabold text-[#123B38]">{contexto?.campus || 'Santo Domingo'}</span>
               </div>
               <div className="p-3.5 rounded-2xl bg-[#F4FAF7] border border-[#D8EAE2]">
-                <span className="text-[#52716B] font-bold block text-[10px] uppercase">Fecha de Ingreso</span>
-                <span className="font-extrabold text-[#123B38]">{usuario?.fechaIngreso || 'Octubre 2022'}</span>
+                <span className="text-[#52716B] font-bold block text-[10px] uppercase">Periodo Académico</span>
+                <span className="font-extrabold text-[#123B38]">{contexto?.periodo?.nombre || '202650 - MARZO 2026 - AGOSTO 2026'}</span>
               </div>
             </div>
           </div>
@@ -166,12 +179,12 @@ export const ProfilePage = () => {
               </div>
               <div className="p-3.5 rounded-2xl bg-[#F4FAF7] border border-[#D8EAE2]">
                 <span className="text-[#52716B] font-bold block text-[10px] uppercase">Teléfono Móvil</span>
-                <span className="font-extrabold text-[#123B38]">{usuario?.telefono || '+593 99 876 5432'}</span>
+                <span className="font-extrabold text-[#123B38]">{usuario?.telefono || 'No registrado'}</span>
               </div>
               <div className="p-3.5 rounded-2xl bg-[#F4FAF7] border border-[#D8EAE2]">
-                <span className="text-[#52716B] font-bold block text-[10px] uppercase">Estado de Cuenta</span>
+                <span className="text-[#52716B] font-bold block text-[10px] uppercase">Rol</span>
                 <span className="inline-flex items-center gap-1 font-extrabold text-[#358F80]">
-                  <HiShieldCheck className="w-4 h-4" /> Alumno Regular Activo
+                  <HiShieldCheck className="w-4 h-4" /> {usuario?.rol === 'docente' ? 'Docente' : usuario?.rol === 'admin' ? 'Administrador' : 'Estudiante'}
                 </span>
               </div>
             </div>

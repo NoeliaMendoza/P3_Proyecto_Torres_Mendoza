@@ -97,4 +97,68 @@ router.get('/perfil', async (req, res) => {
   }
 });
 
+router.get('/me/contexto', async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    if (!auth) return res.status(401).json({ mensaje: 'Token requerido.' });
+    const decoded = require('jsonwebtoken').verify(auth.split(' ')[1], process.env.JWT_SECRET);
+    const r = await conexion.query(`
+      SELECT u.id, u.email, u.nombre_completo, u.rol, u.codigo_estudiante, u.nivel_pao,
+             u.id_carrera, c.nombre AS carrera_nombre, c.codigo AS carrera_codigo,
+             u.id_periodo_activo, p.nombre AS periodo_nombre, p.codigo AS periodo_codigo,
+             u.id_docente, d.nombre_completo AS docente_nombre
+      FROM usuarios u
+      LEFT JOIN carreras c ON u.id_carrera = c.id
+      LEFT JOIN periodos_academicos p ON u.id_periodo_activo = p.id
+      LEFT JOIN docentes d ON u.id_docente = d.id
+      WHERE u.id = $1
+    `, [decoded.id]);
+    if (r.rows.length === 0) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+    const user = r.rows[0];
+    const contexto = {
+      usuario: {
+        id: user.id, nombre: user.nombre_completo, correo: user.email, rol: user.rol,
+        codigo_estudiante: user.codigo_estudiante,
+      },
+      carrera: user.id_carrera ? { id: user.id_carrera, codigo: user.carrera_codigo, nombre: user.carrera_nombre } : null,
+      periodo: user.id_periodo_activo ? { id: user.id_periodo_activo, codigo: user.periodo_codigo, nombre: user.periodo_nombre } : null,
+      nivel_pao: user.nivel_pao,
+      campus: 'Santo Domingo',
+      docente: user.id_docente ? { id: user.id_docente, nombre: user.docente_nombre } : null,
+    };
+
+    if (user.rol === 'estudiante' && user.id_periodo_activo) {
+      const mats = await conexion.query(`
+        SELECT m.id, a.codigo AS asignatura_codigo, a.nombre AS asignatura_nombre,
+               n.nrc, n.nivel_pao, n.paralelo, a.creditos,
+               d.nombre_completo AS docente
+        FROM matriculas m
+        JOIN nrc n ON m.id_nrc = n.id
+        JOIN asignaturas a ON n.id_asignatura = a.id
+        LEFT JOIN docentes d ON n.id_docente = d.id
+        WHERE m.id_usuario = $1 AND m.id_periodo = $2 AND m.estado = 'activa'
+        ORDER BY a.nombre
+      `, [decoded.id, user.id_periodo_activo]);
+      contexto.asignaturas_matriculadas = mats.rows;
+    }
+
+    if (user.rol === 'docente' && user.id_docente && user.id_periodo_activo) {
+      const mats = await conexion.query(`
+        SELECT n.id AS nrc_id, n.nrc, a.codigo AS asignatura_codigo, a.nombre AS asignatura_nombre,
+               n.nivel_pao, n.paralelo, a.creditos
+        FROM nrc n
+        JOIN asignaturas a ON n.id_asignatura = a.id
+        WHERE n.id_docente = $1 AND n.id_periodo = $2
+        ORDER BY a.nombre
+      `, [user.id_docente, user.id_periodo_activo]);
+      contexto.asignaturas_dictadas = mats.rows;
+    }
+
+    res.json(contexto);
+  } catch (error) {
+    console.error('Error en /me/contexto:', error);
+    res.status(500).json({ mensaje: 'Error al obtener contexto del usuario.' });
+  }
+});
+
 module.exports = router;

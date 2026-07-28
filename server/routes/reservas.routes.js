@@ -41,18 +41,28 @@ router.patch('/:id/estado', authentication, authorization('admin'), async (req, 
   try {
     const result = await conexion.query(
       `UPDATE reservas_espacios
-       SET estado = $1
+       SET estado = $1, aprobado_por = $3, fecha_revision = NOW()
        WHERE id = $2
          AND NOT (fecha + hora_fin < CURRENT_TIMESTAMP)
        RETURNING id, id_usuario, id_espacio, fecha, hora_inicio, hora_fin, estado`,
-      [estado, req.params.id]
+      [estado, req.params.id, req.usuario.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({
         mensaje: 'La reserva no existe o ya finalizó y no puede modificarse.',
       });
     }
-    res.json({ mensaje: `Reserva ${estado} correctamente.`, reserva: result.rows[0] });
+    const reserva = result.rows[0];
+    const titulo = estado === 'aprobada' ? 'Reserva Aprobada' : 'Reserva Rechazada';
+    const mensajeN = estado === 'aprobada'
+      ? `Tu reserva para el ${reserva.fecha} (${reserva.hora_inicio.slice(0,5)}-${reserva.hora_fin.slice(0,5)}) fue aprobada.`
+      : `Tu reserva para el ${reserva.fecha} (${reserva.hora_inicio.slice(0,5)}-${reserva.hora_fin.slice(0,5)}) fue rechazada.`;
+    await conexion.query(
+      `INSERT INTO notificaciones (id_usuario, titulo, mensaje, categoria, referencia_tipo, referencia_id)
+       VALUES ($1, $2, $3, 'reserva', 'reserva', $4)`,
+      [reserva.id_usuario, titulo, mensajeN, reserva.id]
+    );
+    res.json({ mensaje: `Reserva ${estado} correctamente.`, reserva });
   } catch (error) {
     console.error('Error al actualizar reserva:', error);
     res.status(500).json({ mensaje: 'No se pudo actualizar la reserva.' });
@@ -102,6 +112,36 @@ router.post('/', authentication, async (req, res) => {
       return res.status(400).json({
         mensaje: 'La hora de finalización debe ser posterior a la hora de inicio.',
       });
+    }
+
+    // Obtener periodo activo del usuario
+    const userPeriodo = await client.query(
+      'SELECT id_periodo_activo FROM usuarios WHERE id = $1', [req.usuario.id]
+    );
+    const idPeriodo = userPeriodo.rows[0]?.id_periodo_activo;
+
+    // Si existe periodo activo, validar que la fecha esté dentro del rango
+    if (idPeriodo) {
+      const periodo = await client.query(
+        'SELECT fecha_inicio, fecha_fin FROM periodos_academicos WHERE id = $1', [idPeriodo]
+      );
+      if (periodo.rows.length > 0) {
+        const { fecha_inicio, fecha_fin } = periodo.rows[0];
+        if (range.fecha < fecha_inicio || range.fecha > fecha_fin) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ mensaje: 'La fecha está fuera del periodo académico activo.' });
+        }
+      }
+    }
+
+    // Límite de reservas pendientes (máximo 2)
+    const pendientesCount = await client.query(
+      `SELECT COUNT(*) AS cnt FROM reservas_espacios
+       WHERE id_usuario = $1 AND estado = 'pendiente'`, [req.usuario.id]
+    );
+    if (parseInt(pendientesCount.rows[0].cnt) >= 2) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ mensaje: 'Ya tienes 2 reservas pendientes. Espera a que sean revisadas.' });
     }
 
     // Evita que dos peticiones simultáneas reserven el mismo espacio y fecha.
@@ -178,9 +218,9 @@ router.post('/', authentication, async (req, res) => {
 
     const result = await client.query(
       `INSERT INTO reservas_espacios
-       (id_espacio, id_usuario, fecha, hora_inicio, hora_fin, motivo)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [espacioId, req.usuario.id, fecha, horaInicio, horaFin, motivo || null]
+       (id_espacio, id_usuario, fecha, hora_inicio, hora_fin, motivo, id_periodo)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [espacioId, req.usuario.id, fecha, horaInicio, horaFin, motivo || null, idPeriodo]
     );
     await client.query('COMMIT');
     res.status(201).json({ mensaje: 'Reserva registrada correctamente.', reserva: result.rows[0] });

@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   HiXMark, 
@@ -6,19 +8,39 @@ import {
   HiTag, 
   HiInformationCircle, 
   HiCheckBadge,
-  HiTrash
 } from 'react-icons/hi2';
 import { useUIStore } from '../../store/uiStore';
 import { PushControls } from './PushControls';
+import { obtenerNotificaciones, marcarLeida, marcarTodasLeidas as marcarTodasLeidasAPI } from '../../services/notificaciones.services';
 
 export const NotificationDrawer = () => {
+  const queryClient = useQueryClient();
   const { 
     notificationDrawerOpen, 
     toggleNotificationDrawer, 
     notificaciones, 
+    setNotificaciones,
     marcarNotificacionLeida, 
     marcarTodasLeidas 
   } = useUIStore();
+
+  const { data: notifsAPI } = useQuery({
+    queryKey: ['notificaciones'],
+    queryFn: obtenerNotificaciones,
+    staleTime: 15000,
+    enabled: notificationDrawerOpen,
+  });
+  useEffect(() => { if (notifsAPI) setNotificaciones(notifsAPI); }, [notifsAPI, setNotificaciones]);
+
+  const marcarLeidaMut = useMutation({
+    mutationFn: marcarLeida,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notificaciones'] }),
+  });
+
+  const marcarTodasMut = useMutation({
+    mutationFn: marcarTodasLeidasAPI,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notificaciones'] }),
+  });
 
   const unreadCount = notificaciones.filter(n => !n.leido).length;
 
@@ -87,15 +109,15 @@ export const NotificationDrawer = () => {
             {notificaciones.length > 0 && (
               <div className="px-5 py-2.5 bg-slate-100/60 border-b border-slate-200/60 flex items-center justify-between text-xs text-slate-600">
                 <span>{notificaciones.length} notificaciones totales</span>
-                {unreadCount > 0 && (
-                  <button
-                    onClick={marcarTodasLeidas}
-                    className="flex items-center gap-1 font-medium text-emerald-700 hover:text-emerald-800 transition-colors"
-                  >
-                    <HiCheckBadge className="w-4 h-4" />
-                    Marcar todas como leídas
-                  </button>
-                )}
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={() => { marcarTodasLeidas(); marcarTodasMut.mutate(); }}
+                      className="flex items-center gap-1 font-medium text-emerald-700 hover:text-emerald-800 transition-colors"
+                    >
+                      <HiCheckBadge className="w-4 h-4" />
+                      Marcar todas como leídas
+                    </button>
+                  )}
               </div>
             )}
 
@@ -116,7 +138,7 @@ export const NotificationDrawer = () => {
                     layout
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    onClick={() => marcarNotificacionLeida(n.id)}
+                    onClick={() => { marcarNotificacionLeida(n.id); marcarLeidaMut.mutate(n.id); }}
                     className={`p-4 rounded-xl border transition-all cursor-pointer ${
                       n.leido
                         ? 'bg-white border-slate-200/80 opacity-75'
@@ -133,7 +155,7 @@ export const NotificationDrawer = () => {
                             {n.titulo}
                           </h4>
                           <span className="text-[11px] text-slate-400 font-medium ml-2 whitespace-nowrap">
-                            {n.fecha}
+                            {n.created_at ? new Date(n.created_at).toLocaleDateString('es-EC', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : ''}
                           </span>
                         </div>
                         <p className="text-xs text-slate-600 mt-1 leading-relaxed">

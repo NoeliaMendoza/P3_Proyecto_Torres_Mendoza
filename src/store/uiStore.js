@@ -1,22 +1,26 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { INITIAL_NOTIFICACIONES, INITIAL_ESPACIOS, INITIAL_OBJETOS, MOCK_RESERVAS_HISTORIAL } from '../data/mockData';
 
 export const useUIStore = create(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       sidebarOpen: true,
       notificationDrawerOpen: false,
-      notificaciones: INITIAL_NOTIFICACIONES,
-      espacios: INITIAL_ESPACIOS,
-      objetos: INITIAL_OBJETOS,
-      reservas: MOCK_RESERVAS_HISTORIAL,
+      notificaciones: [],
+      espacios: [],
+      objetos: [],
+      reservas: [],
 
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       
       toggleNotificationDrawer: () => set((state) => ({ notificationDrawerOpen: !state.notificationDrawerOpen })),
       setNotificationDrawerOpen: (open) => set({ notificationDrawerOpen: open }),
+
+      setEspacios: (espacios) => set({ espacios }),
+      setReservas: (reservas) => set({ reservas }),
+      setObjetos: (objetos) => set({ objetos }),
+      setNotificaciones: (notificaciones) => set({ notificaciones }),
 
       marcarNotificacionLeida: (id) =>
         set((state) => ({
@@ -34,8 +38,8 @@ export const useUIStore = create(
           notificaciones: [
             {
               id: Date.now(),
-              titulo: 'Reserva Registrada',
-              mensaje: `Has reservado ${nuevaReserva.espacioNombre} para el ${nuevaReserva.fecha} (${nuevaReserva.horario}).`,
+              titulo: 'Reserva Solicitada',
+              mensaje: `Has solicitado ${nuevaReserva.espacioNombre} para el ${nuevaReserva.fecha} (${nuevaReserva.horario}). Pendiente de aprobación.`,
               fecha: 'Ahora mismo',
               categoria: 'reserva',
               leido: false

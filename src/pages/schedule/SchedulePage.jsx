@@ -1,0 +1,126 @@
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { HiClock, HiAcademicCap, HiPlusCircle } from 'react-icons/hi2';
+import { useAuthStore } from '../../store/authStore';
+import api from '../../api/axios';
+import AgregarMateriaModal from '../../components/schedule/AgregarMateriaModal';
+
+const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+const BLOQUES = [
+  { inicio: '07:00', fin: '09:00' },
+  { inicio: '09:00', fin: '11:00' },
+  { inicio: '11:00', fin: '13:00' },
+  { inicio: '13:00', fin: '15:00' },
+  { inicio: '15:00', fin: '17:00' },
+];
+
+const obtenerMiHorario = async () => (await api.get('/horarios/mi-horario')).data;
+
+const SchedulePage = () => {
+  const contexto = useAuthStore((s) => s.contexto);
+  const [showAgregar, setShowAgregar] = useState(false);
+  const { data: horario = [], isLoading } = useQuery({
+    queryKey: ['mi-horario'],
+    queryFn: obtenerMiHorario,
+    staleTime: 30000,
+  });
+
+  const grid = useMemo(() => {
+    const celdas = {};
+    horario.forEach(h => {
+      const dia = h.dia_semana;
+      if (!celdas[dia]) celdas[dia] = [];
+      celdas[dia].push(h);
+    });
+    return celdas;
+  }, [horario]);
+
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-[#D8EAE2] pb-5">
+        <h1 className="text-2xl font-extrabold text-[#123B38] font-heading flex items-center gap-2">
+          <HiClock className="w-6 h-6 text-[#358F80]" />
+          Mi Horario
+        </h1>
+        <p className="text-xs text-[#52716B] font-semibold mt-1">
+          {contexto?.carrera?.nombre || 'Tecnología de la Información'} &bull; {contexto?.periodo?.nombre || 'Periodo 202650'} &bull; Sede Santo Domingo
+        </p>
+        <button
+          onClick={() => setShowAgregar(true)}
+          className="mt-3 flex items-center gap-1.5 bg-[#358F80] text-white rounded-xl px-4 py-2 text-[11px] font-extrabold hover:bg-[#14746F] transition-colors"
+        >
+          <HiPlusCircle className="w-4 h-4" />
+          Agregar Materia
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div className="py-16 text-center text-sm text-[#52716B] font-semibold">Cargando horario...</div>
+      ) : horario.length === 0 ? (
+        <div className="py-16 text-center bg-white rounded-[32px] border border-[#D8EAE2] p-8">
+          <HiClock className="w-12 h-12 text-[#6A8881] mx-auto" />
+          <h3 className="text-base font-extrabold text-[#123B38] mt-3">No hay horario disponible</h3>
+          <p className="text-xs text-[#52716B] font-semibold mt-1">
+            No tienes asignaturas matriculadas o un periodo activo asignado.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-[32px] border border-[#D8EAE2] shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-[#123B38]">
+              <thead className="bg-[#F4FAF7] border-b border-[#D8EAE2] font-extrabold uppercase tracking-wider text-[10px] text-[#52716B]">
+                <tr>
+                  <th className="px-4 py-3 w-20">Hora</th>
+                  {DIAS.map(d => (
+                    <th key={d} className="px-4 py-3 text-center">{d}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#D8EAE2]">
+                {BLOQUES.map((bloque) => (
+                  <tr key={bloque.inicio} className="hover:bg-[#F4FAF7]/40">
+                    <td className="px-4 py-5 font-extrabold text-[#358F80] whitespace-nowrap text-center">
+                      {bloque.inicio}<br /><span className="text-[#6A8881] font-medium">│</span><br />{bloque.fin}
+                    </td>
+                    {DIAS.map((_, diaIdx) => {
+                      const diaNum = diaIdx + 1;
+                      const clase = horario.find(h =>
+                        h.dia_semana === diaNum &&
+                        h.hora_inicio.slice(0, 5) === bloque.inicio &&
+                        h.hora_fin.slice(0, 5) === bloque.fin
+                      );
+                      return (
+                        <td key={diaIdx} className="px-2 py-2 text-center align-top">
+                          {clase && (
+                            <div className="bg-[#EAF6F0] rounded-xl p-3 border border-[#358F80]/20 h-full min-h-[72px] flex flex-col justify-center">
+                              <p className="font-extrabold text-[11px] text-[#123B38] leading-tight">
+                                {clase.asignatura_codigo}
+                              </p>
+                              <p className="text-[10px] text-[#52716B] font-semibold leading-tight mt-0.5">
+                                {clase.asignatura}
+                              </p>
+                              <p className="text-[10px] text-[#358F80] font-bold mt-1">
+                                {clase.codigo_espacio}
+                              </p>
+                              <p className="text-[8px] text-[#6A8881] font-medium mt-0.5">
+                                {clase.docente}
+                              </p>
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      <AgregarMateriaModal isOpen={showAgregar} onClose={() => setShowAgregar(false)} horarioActual={horario} />
+    </div>
+  );
+};
+
+export default SchedulePage;

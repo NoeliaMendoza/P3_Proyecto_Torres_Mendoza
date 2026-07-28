@@ -1,2 +1,2 @@
-export const DEFAULT_PROFILE_AVATAR =
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+export const getAvatarUrl = (nombre) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre || 'Usuario')}&background=036666&color=fff&size=128`;
