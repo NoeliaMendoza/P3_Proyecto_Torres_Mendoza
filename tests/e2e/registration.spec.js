@@ -33,3 +33,14 @@ test('el backend normaliza el correo y asigna siempre el rol estudiante', async 
   expect(body.usuario.email).toBe(uniqueEmail);
   expect(body.usuario.rol).toBe('estudiante');
 });
+
+test('el docente visualiza su horario y puede colocar una materia disponible', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByLabel('Correo institucional').fill('kjchuquitarko@espe.edu.ec');
+  await page.getByLabel('ContraseÃ±a').fill('docente2026');
+  await page.getByRole('button', { name: /acceder al sistema/i }).click();
+
+  await page.goto('/horarios');
+  await expect(page.getByRole('heading', { name: /mi horario docente/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /colocar materia/i })).toBeVisible();
+});

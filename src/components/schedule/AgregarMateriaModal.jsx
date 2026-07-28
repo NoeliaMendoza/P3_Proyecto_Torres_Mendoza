@@ -2,13 +2,20 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiXMark, HiMagnifyingGlass, HiAcademicCap, HiExclamationTriangle, HiCheckCircle } from 'react-icons/hi2';
-import { obtenerNrcsDisponibles, inscribirNrc } from '../../services/matriculas.services';
+import {
+  asignarNrcDocente,
+  inscribirNrc,
+  obtenerNrcsDisponibles,
+  obtenerNrcsDisponiblesDocente,
+} from '../../services/matriculas.services';
 
 const DIAS = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie' };
 
 function hayChoque(horariosNuevos, horarioActual) {
-  for (const n of horariosNuevos) {
-    for (const a of horarioActual) {
+  for (const n of Array.isArray(horariosNuevos) ? horariosNuevos : []) {
+    if (!n?.dia_semana || !n?.hora_inicio || !n?.hora_fin) continue;
+    for (const a of Array.isArray(horarioActual) ? horarioActual : []) {
+      if (!a?.dia_semana || !a?.hora_inicio || !a?.hora_fin) continue;
       if (n.dia_semana === a.dia_semana &&
           n.hora_inicio < a.hora_fin &&
           n.hora_fin > a.hora_inicio) {
@@ -19,22 +26,23 @@ function hayChoque(horariosNuevos, horarioActual) {
   return false;
 }
 
-const AgregarMateriaModal = ({ isOpen, onClose, horarioActual = [] }) => {
+const AgregarMateriaModal = ({ isOpen, onClose, horarioActual = [], rol = 'estudiante' }) => {
+  const esDocente = rol === 'docente';
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [selectedNrc, setSelectedNrc] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
 
   const { data: disponibles = [], isLoading } = useQuery({
-    queryKey: ['nrcs-disponibles'],
-    queryFn: obtenerNrcsDisponibles,
+    queryKey: ['nrcs-disponibles', rol],
+    queryFn: esDocente ? obtenerNrcsDisponiblesDocente : obtenerNrcsDisponibles,
     enabled: isOpen,
   });
 
   const mutation = useMutation({
-    mutationFn: inscribirNrc,
+    mutationFn: esDocente ? asignarNrcDocente : inscribirNrc,
     onSuccess: (data) => {
-      setSuccessMsg(`Inscrito en NRC ${data.nrc}`);
+      setSuccessMsg(esDocente ? `Materia NRC ${data.nrc} asignada` : `Inscrito en NRC ${data.nrc}`);
       setSelectedNrc(null);
       qc.invalidateQueries({ queryKey: ['mi-horario'] });
       qc.invalidateQueries({ queryKey: ['nrcs-disponibles'] });
@@ -50,11 +58,11 @@ const AgregarMateriaModal = ({ isOpen, onClose, horarioActual = [] }) => {
   const filtrados = useMemo(() => {
     if (!search) return disponibles;
     const q = search.toLowerCase();
-    return disponibles.filter((n) =>
+    return (Array.isArray(disponibles) ? disponibles : []).filter((n) =>
       n.asignatura?.toLowerCase().includes(q) ||
       n.codigo_asignatura?.toLowerCase().includes(q) ||
       n.nrc?.toString().includes(q) ||
-      n.nivel_pao?.toLowerCase().includes(q)
+      n.nivel_pao?.toString().toLowerCase().includes(q)
     );
   }, [disponibles, search]);
 
@@ -78,7 +86,7 @@ const AgregarMateriaModal = ({ isOpen, onClose, horarioActual = [] }) => {
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#D8EAE2]">
               <h2 className="text-base font-extrabold text-[#123B38] font-heading flex items-center gap-2">
                 <HiAcademicCap className="w-5 h-5 text-[#358F80]" />
-                Agregar Materia
+                {esDocente ? 'Colocar Materia' : 'Agregar Materia'}
               </h2>
               <button onClick={onClose} className="text-[#6A8881] hover:text-[#123B38] p-1">
                 <HiXMark className="w-5 h-5" />
@@ -114,10 +122,15 @@ const AgregarMateriaModal = ({ isOpen, onClose, horarioActual = [] }) => {
                 <p className="text-xs text-[#52716B] text-center py-8 font-semibold">Cargando...</p>
               ) : filtrados.length === 0 ? (
                 <p className="text-xs text-[#52716B] text-center py-8 font-semibold">
-                  {search ? 'Sin resultados' : 'No hay materias disponibles para agregar.'}
+                  {search
+                    ? 'Sin resultados'
+                    : esDocente
+                      ? 'No hay materias sin docente disponibles.'
+                      : 'No hay materias disponibles para agregar.'}
                 </p>
               ) : filtrados.map((n) => {
-                const horarios = n.horarios || [];
+                const horarios = (Array.isArray(n.horarios) ? n.horarios : [])
+                  .filter((h) => h?.dia_semana && h?.hora_inicio && h?.hora_fin);
                 const choque = hayChoque(horarios, horarioActual);
                 return (
                   <div
@@ -147,6 +160,11 @@ const AgregarMateriaModal = ({ isOpen, onClose, horarioActual = [] }) => {
                             ))}
                           </div>
                         )}
+                        {horarios.length === 0 && (
+                          <p className="mt-1 text-[9px] font-semibold text-amber-700">
+                            Horario todavía no definido
+                          </p>
+                        )}
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); mutation.mutate(n.id); }}
@@ -156,9 +174,9 @@ const AgregarMateriaModal = ({ isOpen, onClose, horarioActual = [] }) => {
                             ? 'bg-rose-100 text-rose-500 cursor-not-allowed'
                             : 'bg-[#358F80] text-white hover:bg-[#14746F]'
                         }`}
-                        title={choque ? 'Choque de horarios con tu horario actual' : 'Agregar materia'}
+                        title={choque ? 'Choque de horarios con tu horario actual' : esDocente ? 'Colocar materia' : 'Agregar materia'}
                       >
-                        {mutation.isPending ? '...' : choque ? 'Choque' : 'Agregar'}
+                        {mutation.isPending ? '...' : choque ? 'Choque' : esDocente ? 'Colocar' : 'Agregar'}
                       </button>
                     </div>
                     {choque && (
