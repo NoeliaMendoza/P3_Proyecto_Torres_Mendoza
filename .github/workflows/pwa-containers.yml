@@ -148,7 +148,7 @@ jobs:
       - name: Construir y publicar backend
         uses: docker/build-push-action@v6
         with:
-          context: ./server
+          context: .
           file: ./server/Dockerfile
           push: true
           tags: ${{ steps.backend-meta.outputs.tags }}

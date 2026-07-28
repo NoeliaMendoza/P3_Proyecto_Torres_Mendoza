@@ -19,7 +19,9 @@ services:
       retries: 15
 
   backend:
-    build: ./server
+    build:
+      context: .
+      dockerfile: server/Dockerfile
     container_name: espe_backend
     restart: always
     ports:

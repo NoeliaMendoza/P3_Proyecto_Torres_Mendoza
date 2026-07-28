@@ -36,7 +36,18 @@ const migrate = async () => {
     CREATE INDEX IF NOT EXISTS idx_push_usuario ON push_subscriptions(id_usuario);
   `);
 
-  const migrationPath = path.join(__dirname, '../../database/migrations/001_academic_context.sql');
+  const localMigrationPath = path.join(
+    __dirname,
+    '../../database/migrations/001_academic_context.sql',
+  );
+  const containerMigrationPath = path.join(
+    __dirname,
+    'migrations/001_academic_context.sql',
+  );
+  const migrationPath = fs.existsSync(localMigrationPath)
+    ? localMigrationPath
+    : containerMigrationPath;
+
   if (fs.existsSync(migrationPath)) {
     await conexion.query(fs.readFileSync(migrationPath, 'utf8'));
   }
