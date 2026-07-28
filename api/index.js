@@ -38,12 +38,12 @@ const migrate = async () => {
   }
 };
 
+migrate();
+
 if (process.env.VERCEL !== '1') {
   const PUERTO = process.env.PUERTO || 3000;
-  migrate().then(() => {
-    app.listen(PUERTO, () => {
-      console.log(`Servidor ESPEConnect en puerto: ${PUERTO}`);
-    });
+  app.listen(PUERTO, () => {
+    console.log(`Servidor ESPEConnect en puerto: ${PUERTO}`);
   });
 }
 
