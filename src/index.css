@@ -176,11 +176,16 @@
   background: #358F80;
 }
 
-.pwa-status__message--update {
+.pwa-status__message--update,
+.pwa-status__message--install {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.pwa-status__message--install {
+  background: #14746F;
 }
 
 .pwa-status__message button {

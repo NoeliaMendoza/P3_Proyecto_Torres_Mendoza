@@ -2,6 +2,37 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { processOfflineQueue } from '../../services/offlineQueue';
 
+const PWAInstallButton = () => {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') setDeferredPrompt(null);
+  };
+
+  if (!deferredPrompt) return null;
+
+  return (
+    <div className="pwa-status__message pwa-status__message--install">
+      <span>Instala ESPEConnect en tu dispositivo</span>
+      <button type="button" onClick={handleInstall}>
+        Instalar
+      </button>
+    </div>
+  );
+};
+
 export const PWAStatus = () => {
   const [offline, setOffline] = useState(() => !navigator.onLine);
   const [updateAvailable, setUpdateAvailable] = useState(
@@ -43,10 +74,12 @@ export const PWAStatus = () => {
     };
   }, []);
 
-  if (!offline && !updateAvailable && !offlineReady) return null;
+  if (!offline && !updateAvailable && !offlineReady) return <PWAInstallButton />;
 
   return (
     <aside className="pwa-status" aria-live="polite">
+      <PWAInstallButton />
+
       {offline && (
         <div className="pwa-status__message">
           Estás sin conexión. Puedes consultar la información guardada.
