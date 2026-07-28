@@ -1,15 +1,17 @@
-import { Header } from './header';
+﻿import { Header } from './header';
 import { Sidebar } from './sidebar';
 import { NotificationDrawer } from '../common/NotificationDrawer';
+import { AIAssistant } from '../assistant/AIAssistant';
 import { useUIStore } from '../../store/uiStore';
 
 export const Layout = ({ children }) => {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
 
   return (
-    <div className="min-h-screen bg-[#F2F4EF] flex flex-col font-sans">
+    <div className="app-surface min-h-screen flex flex-col font-sans">
       <Sidebar />
       <NotificationDrawer />
+      <AIAssistant />
 
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ${
@@ -17,11 +19,11 @@ export const Layout = ({ children }) => {
         }`}
       >
         <Header />
-        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
+        <main className="mx-auto w-full max-w-7xl flex-1 p-4 md:p-8">
           {children}
         </main>
-        <footer className="py-5 px-8 bg-white border-t border-[#E0E4DC] text-center text-xs text-[#586663] font-semibold">
-          <p>© 2026 Universidad de las Fuerzas Armadas ESPE &bull; ESPEConnect Platform</p>
+        <footer className="border-t border-[#D8EAE2] bg-white/70 px-8 py-5 text-center text-xs font-semibold text-[#52716B]">
+          <p>© 2026 Universidad de las Fuerzas Armadas ESPE · ESPEConnect</p>
         </footer>
       </div>
     </div>
