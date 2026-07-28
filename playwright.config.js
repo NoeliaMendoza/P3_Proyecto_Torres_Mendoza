@@ -6,7 +6,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL: process.env.PWA_BASE_URL || "http://localhost:4173",
-    channel: "msedge",
+    channel: process.env.PW_CHANNEL || "msedge",
     trace: "retain-on-failure",
   },
   reporter: [["list"], ["html", { open: "never" }]],

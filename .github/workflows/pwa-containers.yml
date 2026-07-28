@@ -1,0 +1,157 @@
+name: Probar y publicar PWA
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: pwa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Probar PWA desplegada en Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      DB_DATABASE: espe_connect
+      DB_USER: postgres
+      DB_PASSWORD: ci-postgres-password
+      JWT_SECRET: ci-jwt-secret-with-at-least-32-characters
+      VAPID_PUBLIC_KEY: ""
+      VAPID_PRIVATE_KEY: ""
+      VAPID_SUBJECT: mailto:ci@espe.edu.ec
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: qwen2.5:0.5b
+      PWA_BASE_URL: http://127.0.0.1:4173
+      PW_CHANNEL: chromium
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias de pruebas
+        run: npm ci
+
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Levantar frontend, backend y PostgreSQL
+        run: docker compose up --build --detach
+
+      - name: Esperar a que la PWA esté disponible
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose ps
+          docker compose logs
+          exit 1
+
+      - name: Ejecutar pruebas E2E
+        run: npx playwright test --grep-invert "asistente"
+
+      - name: Guardar reporte si una prueba falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-playwright
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Mostrar logs de contenedores si falla el flujo
+        if: failure()
+        run: docker compose logs
+
+      - name: Detener contenedores
+        if: always()
+        run: docker compose down --volumes
+
+  publish:
+    name: Publicar imágenes en GHCR
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Preparar nombres de imágenes
+        id: image
+        shell: bash
+        run: |
+          owner="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          echo "frontend=ghcr.io/${owner}/especonnect-frontend" >> "$GITHUB_OUTPUT"
+          echo "backend=ghcr.io/${owner}/especonnect-backend" >> "$GITHUB_OUTPUT"
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar sesión en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Etiquetas del frontend
+        id: frontend-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.frontend }}
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Construir y publicar frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          build-args: VITE_API_URL=/api
+          tags: ${{ steps.frontend-meta.outputs.tags }}
+          labels: ${{ steps.frontend-meta.outputs.labels }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+      - name: Etiquetas del backend
+        id: backend-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.backend }}
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Construir y publicar backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: true
+          tags: ${{ steps.backend-meta.outputs.tags }}
+          labels: ${{ steps.backend-meta.outputs.labels }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
