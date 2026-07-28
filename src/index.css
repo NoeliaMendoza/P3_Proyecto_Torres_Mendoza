@@ -193,7 +193,7 @@
   z-index: 9999;
   left: 1rem;
   bottom: 1rem;
-  width: min(25rem, calc(100vw - 2rem));
+  width: min(27rem, calc(100vw - 2rem));
   overflow: visible;
   border: 1px solid rgba(86, 171, 145, 0.28);
   border-radius: 1.25rem;
@@ -212,11 +212,12 @@
 }
 
 .pwa-install-card__icon {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 4.25rem;
+  height: 3.25rem;
   overflow: hidden;
-  border-radius: 0.9rem;
-  background: #f4faf7;
+  padding: 0.2rem;
+  border-radius: 1rem;
+  background: #ffffff;
   box-shadow: inset 0 0 0 1px rgba(86, 171, 145, 0.2);
 }
 
@@ -224,7 +225,7 @@
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .pwa-install-card__copy {
