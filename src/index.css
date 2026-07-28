@@ -188,6 +188,30 @@
   background: #14746F;
 }
 
+.pwa-install-btn {
+  position: fixed;
+  z-index: 9999;
+  left: 1rem;
+  bottom: 1rem;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 14px;
+  background: #036666;
+  color: #99E2B4;
+  box-shadow: 0 6px 20px rgba(3, 102, 102, 0.3);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s;
+}
+
+.pwa-install-btn:hover {
+  background: #14746F;
+  color: #fff;
+  transform: scale(1.08);
+}
+
 .pwa-status__message button {
   flex: none;
   padding: 0.45rem 0.8rem;
