@@ -1,4 +1,5 @@
-﻿import { useState, useMemo } from 'react';
+﻿import { useState, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
   HiMagnifyingGlass, 
@@ -10,12 +11,39 @@ import {
   HiInboxStack
 } from 'react-icons/hi2';
 import { useUIStore } from '../../store/uiStore';
+import { obtenerObjetos } from '../../services/objetos.services';
 import { LostFoundCard } from '../../components/lostFound/LostFoundCard';
 import { PublishObjectModal } from '../../components/lostFound/PublishObjectModal';
 import { ObjectDetailModal } from '../../components/lostFound/ObjectDetailModal';
 
+const mapearObjeto = (api) => ({
+  id: api.id,
+  nombre: api.titulo,
+  descripcion: api.descripcion,
+  tipo: api.tipo,
+  lugar: api.ubicacion || 'No especificada',
+  fecha: api.fecha_evento || 'Sin fecha',
+  categoria: api.categoria_nombre || 'Sin categoría',
+  imagen: Array.isArray(api.imagenes_url) && api.imagenes_url.length > 0 ? api.imagenes_url[0] : 'https://placehold.co/600x400/036666/99E2B4?text=ESPEConnect',
+  estado: api.estado,
+  reportante_nombre: api.reportante_nombre || 'Anónimo',
+  reportante_contacto: api.informacion_contacto || 'No disponible',
+  es_reclamado: api.es_reclamado,
+  id_categoria: api.id_categoria,
+});
+
 export const LostObjectsPages = () => {
-  const { objetos } = useUIStore();
+  const { objetos, setObjetos } = useUIStore();
+
+  const { data: objetosAPI } = useQuery({
+    queryKey: ['objetos'],
+    queryFn: obtenerObjetos,
+    staleTime: 30000,
+  });
+
+  useEffect(() => {
+    if (objetosAPI) setObjetos(objetosAPI.map(mapearObjeto));
+  }, [objetosAPI, setObjetos]);
 
   const [activeTab, setActiveTab] = useState('todos'); // 'todos' | 'perdidos' | 'encontrados'
   const [searchTerm, setSearchTerm] = useState('');

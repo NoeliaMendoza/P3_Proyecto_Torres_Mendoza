@@ -12,6 +12,7 @@ services:
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./database/pwa-features.sql:/docker-entrypoint-initdb.d/02-pwa-features.sql:ro
       - ./database/seed_horarios.sql:/docker-entrypoint-initdb.d/03-seed-horarios.sql:ro
+      - ./database/seed_objetos.sql:/docker-entrypoint-initdb.d/04-seed-objetos.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_DATABASE}"]
       interval: 5s

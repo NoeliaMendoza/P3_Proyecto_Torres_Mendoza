@@ -20,11 +20,17 @@ export const obtenerObjetos = async (params) => {
   }
 };
 
+const CATEGORIAS = {
+  'Electrónica': 1, 'Documentos': 2, 'Mochilas y Bolsos': 3, 'Accesorios': 4,
+  'Útiles Académicos': 5, 'Ropa': 6, 'Billeteras': 7, 'Otros': 8,
+};
+
 export const crearObjeto = async (data) => {
   const payload = {
     titulo: data.nombre,
     descripcion: data.descripcion,
     tipo: data.tipo,
+    id_categoria: CATEGORIAS[data.categoria] || null,
     ubicacion: data.lugar,
     fecha_evento: data.fecha,
     informacion_contacto: data.reportante_contacto,
