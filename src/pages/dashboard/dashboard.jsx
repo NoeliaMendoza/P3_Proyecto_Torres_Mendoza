@@ -238,7 +238,9 @@ export const DashboardPages = () => {
                 <HiUser className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-extrabold font-heading">Perfil del Estudiante</h4>
+                <h4 className="text-sm font-extrabold font-heading">
+                  Perfil del {usuario?.rol === 'docente' ? 'Docente' : usuario?.rol === 'admin' ? 'Administrador' : 'Estudiante'}
+                </h4>
                 <p className="text-xs text-[#C8E8D7] font-semibold">Configuración y carnet digital</p>
               </div>
             </div>

@@ -22,7 +22,7 @@ const mapearObjeto = (api) => ({
   descripcion: api.descripcion,
   tipo: api.tipo,
   lugar: api.ubicacion || 'No especificada',
-  fecha: api.fecha_evento || 'Sin fecha',
+  fecha: api.fecha_evento ? String(api.fecha_evento).slice(0, 10) : 'Sin fecha',
   categoria: api.categoria_nombre || 'Sin categoría',
   imagen: Array.isArray(api.imagenes_url) && api.imagenes_url.length > 0 ? api.imagenes_url[0] : 'https://placehold.co/600x400/036666/99E2B4?text=ESPEConnect',
   estado: api.estado,
