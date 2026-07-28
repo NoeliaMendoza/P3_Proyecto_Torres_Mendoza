@@ -10,8 +10,7 @@ import {
   HiArrowRight, 
   HiCalendar, 
   HiClock, 
-  HiPlus, 
-  HiSparkles,
+  HiPlus,
   HiUser
 } from 'react-icons/hi2';
 import { useAuthStore } from '../../store/authStore';
