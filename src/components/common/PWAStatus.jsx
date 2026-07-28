@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, CardContent } from '@heroui/react';
-import { HiArrowDownTray, HiDevicePhoneMobile, HiXMark } from 'react-icons/hi2';
+import { HiArrowDownTray, HiXMark } from 'react-icons/hi2';
 import { toast } from 'sonner';
 import { processOfflineQueue } from '../../services/offlineQueue';
 
@@ -51,7 +51,7 @@ const PWAInstallButton = () => {
     <Card className="pwa-install-card" shadow="lg">
       <CardContent className="pwa-install-card__content">
         <div className="pwa-install-card__icon" aria-hidden="true">
-          <HiDevicePhoneMobile />
+          <img src="/icons/icon-192x192.png" alt="" />
         </div>
 
         <div className="pwa-install-card__copy">
