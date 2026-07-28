@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button, Card, CardContent, Checkbox, Chip, Input } from '@heroui/react';
+import { Button, Card, CardContent, Chip, Input } from '@heroui/react';
 import {
   HiAcademicCap,
   HiArrowRight,
@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { login, recperarPasswordService, registerUser } from '../../services/auth.services';
 import { useAuthStore } from '../../store/authStore';
 import { PasswordRequirements } from '../../components/auth/PasswordRequirements';
+import AuthCheckbox from '../../components/auth/AuthCheckbox';
 import { validateRegistration } from '../../validation/registration';
 
 const FEATURES = [
@@ -308,36 +309,28 @@ export const LoginPages = () => {
                         required
                         error={registerErrors.confirmPassword}
                       />
-                      <div>
-                        <Checkbox
-                          isSelected={acceptedTerms}
-                          onValueChange={(selected) => {
-                            setAcceptedTerms(selected);
-                            setRegisterErrors((current) => ({ ...current, acceptedTerms: undefined }));
-                          }}
-                          classNames={{ label: 'text-xs leading-5 text-[#52716B]' }}
-                        >
-                          Acepto los términos de uso y la política de privacidad.
-                        </Checkbox>
-                        {registerErrors.acceptedTerms && (
-                          <p role="alert" className="ml-1 mt-1 text-[11px] font-semibold text-rose-600">
-                            {registerErrors.acceptedTerms}
-                          </p>
-                        )}
-                        <p className="ml-7 mt-1 text-[10px] font-semibold text-[#6A8881]">
-                          Las cuentas creadas aquí reciben el rol Estudiante.
-                        </p>
-                      </div>
+                      <AuthCheckbox
+                        name="acceptedTerms"
+                        checked={acceptedTerms}
+                        onChange={(selected) => {
+                          setAcceptedTerms(selected);
+                          setRegisterErrors((current) => ({ ...current, acceptedTerms: undefined }));
+                        }}
+                        error={registerErrors.acceptedTerms}
+                        description="Las cuentas creadas aquí reciben el rol Estudiante."
+                      >
+                        Acepto los términos de uso y la política de privacidad.
+                      </AuthCheckbox>
                     </>
                   ) : (
                     <div className="flex items-center justify-between gap-3">
-                      <Checkbox
-                        isSelected={recordarme}
-                        onValueChange={setRecordarme}
-                        classNames={{ label: 'text-xs text-[#52716B]' }}
+                      <AuthCheckbox
+                        name="rememberMe"
+                        checked={recordarme}
+                        onChange={setRecordarme}
                       >
                         Recordarme
-                      </Checkbox>
+                      </AuthCheckbox>
                       <Button
                         variant="light"
                         size="sm"
