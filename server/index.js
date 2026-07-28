@@ -33,6 +33,7 @@ app.use('/matriculas', require('./routes/matriculas.routes'));
 const start = async () => {
   try {
     await require('./database/migrate')();
+    await require('./database/seed-demo-users')();
     app.listen(PUERTO, () => {
       console.log(`Servidor ESPEConnect ejecutándose en el puerto: ${PUERTO}`);
     });

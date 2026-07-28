@@ -34,6 +34,8 @@ const DEMO_USERS = [
 ];
 
 const seedDemoUsers = async () => {
+  if (process.env.SEED_DEMO_USERS !== 'true') return;
+
   const carrera = await conexion.query(
     "SELECT id FROM carreras WHERE codigo = 'TECINFO' LIMIT 1",
   );
@@ -115,6 +117,8 @@ const seedDemoUsers = async () => {
       }
     }
   }
+
+  console.log('Usuarios de demostración preparados.');
 };
 
 module.exports = seedDemoUsers;
