@@ -15,6 +15,7 @@ const LostObjectsPages = lazy(() => import("./pages/lost-objects").then((module)
 const AdminSpacesPages = lazy(() => import("./pages/admin-spaces").then((module) => ({ default: module.AdminSpacesPages })));
 const AdminReservationsPage = lazy(() => import("./pages/admin-reservations").then((module) => ({ default: module.AdminReservationsPage })));
 const ProfilePage = lazy(() => import("./pages/profile/profile").then((module) => ({ default: module.ProfilePage })));
+const AuthActionPage = lazy(() => import("./pages/auth-action/AuthActionPage").then((module) => ({ default: module.AuthActionPage })));
 
 
 const queryClient = new QueryClient({
@@ -36,6 +37,8 @@ function App() {
         <Suspense fallback={<div className="pwa-loading" role="status">Cargando ESPEConnect…</div>}>
           <Routes>
           <Route path="/login" element={<LoginPages />} />
+          <Route path="/verificar-correo" element={<AuthActionPage action="verify" />} />
+          <Route path="/restablecer-password" element={<AuthActionPage action="reset" />} />
           <Route
             path="/dashboard"
             element={

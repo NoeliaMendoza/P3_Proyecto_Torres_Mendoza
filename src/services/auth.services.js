@@ -15,6 +15,21 @@ export const recperarPasswordService = async (correo) => {
   return response.data;
 };
 
+export const verificarCorreo = async (token) => {
+  const response = await api.get('/auth/verificar-correo', { params: { token } });
+  return response.data;
+};
+
+export const reenviarVerificacion = async (correo) => {
+  const response = await api.post('/auth/reenviar-verificacion', { correo });
+  return response.data;
+};
+
+export const restablecerPassword = async (token, password) => {
+  const response = await api.post('/auth/restablecer-password', { token, password });
+  return response.data;
+};
+
 export const obtenerContextoUsuario = async () => {
   const response = await api.get('/auth/me/contexto');
   return response.data;

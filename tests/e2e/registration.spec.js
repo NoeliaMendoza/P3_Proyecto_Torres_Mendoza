@@ -17,7 +17,7 @@ test('muestra validaciones específicas en el formulario de registro', async ({ 
   await expect(page.getByText(/debes aceptar los términos/i)).toBeVisible();
 });
 
-test('el backend normaliza el correo y asigna siempre el rol estudiante', async ({ request }) => {
+test('el backend normaliza el correo y exige verificación antes de iniciar sesión', async ({ request }) => {
   const uniqueEmail = `prueba.${Date.now()}@espe.edu.ec`;
   const response = await request.post('/api/auth/register', {
     data: {
@@ -30,8 +30,13 @@ test('el backend normaliza el correo y asigna siempre el rol estudiante', async 
 
   expect(response.status()).toBe(201);
   const body = await response.json();
-  expect(body.usuario.email).toBe(uniqueEmail);
-  expect(body.usuario.rol).toBe('estudiante');
+  expect(body.requiere_verificacion).toBe(true);
+
+  const loginResponse = await request.post('/api/auth/login', {
+    data: { correo: uniqueEmail, password: 'Segura#2026' },
+  });
+  expect(loginResponse.status()).toBe(403);
+  expect((await loginResponse.json()).codigo).toBe('EMAIL_NO_VERIFICADO');
 });
 
 test('el docente visualiza su horario y puede colocar una materia disponible', async ({ page }) => {

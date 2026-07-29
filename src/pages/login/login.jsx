@@ -16,7 +16,13 @@ import {
   HiXMark,
 } from 'react-icons/hi2';
 import { toast } from 'sonner';
-import { login, recperarPasswordService, registerUser, obtenerContextoUsuario } from '../../services/auth.services';
+import {
+  login,
+  obtenerContextoUsuario,
+  recperarPasswordService,
+  reenviarVerificacion,
+  registerUser,
+} from '../../services/auth.services';
 import { useAuthStore } from '../../store/authStore';
 import { PasswordRequirements } from '../../components/auth/PasswordRequirements';
 import AuthCheckbox from '../../components/auth/AuthCheckbox';
@@ -79,6 +85,7 @@ export const LoginPages = () => {
   const [loading, setLoading] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [verificationPending, setVerificationPending] = useState(false);
   const navigate = useNavigate();
   const saveSession = useAuthStore((state) => state.login);
   const setContexto = useAuthStore((state) => state.setContexto);
@@ -88,6 +95,7 @@ export const LoginPages = () => {
     setLoading(true);
     try {
       const data = await login(correo, password);
+      setVerificationPending(false);
       saveSession(data.usuario, data.token);
       try { const ctx = await obtenerContextoUsuario(); setContexto(ctx); } catch (_) {}
       toast.success('Bienvenido a ESPEConnect', {
@@ -95,6 +103,7 @@ export const LoginPages = () => {
       });
       navigate('/dashboard');
     } catch (error) {
+      setVerificationPending(error.response?.data?.codigo === 'EMAIL_NO_VERIFICADO');
       toast.error('No pudimos iniciar sesión', {
         description: error.response?.data?.mensaje || 'Verifica tus credenciales y la conexión.',
       });
@@ -128,7 +137,7 @@ export const LoginPages = () => {
         validation.values.password,
       );
       toast.success('Cuenta creada correctamente', {
-        description: 'Tu cuenta fue registrada con el rol Estudiante. Ya puedes iniciar sesión.',
+        description: 'Revisa tu correo institucional y abre el enlace para activar tu cuenta.',
       });
       setMode('login');
       setNombre('');
@@ -358,6 +367,23 @@ export const LoginPages = () => {
                 </form>
               </CardContent>
             </Card>
+
+            {mode === 'login' && verificationPending && (
+              <Button
+                variant="light"
+                className="mt-3 w-full text-xs font-extrabold text-[#14746F]"
+                onPress={async () => {
+                  try {
+                    const data = await reenviarVerificacion(correo);
+                    toast.success('Solicitud procesada', { description: data.mensaje });
+                  } catch (error) {
+                    toast.error(error.response?.data?.mensaje || 'No fue posible reenviar el correo.');
+                  }
+                }}
+              >
+                Reenviar correo de verificación
+              </Button>
+            )}
 
             <div className="mt-4 flex items-center justify-center gap-1 text-xs text-[#52716B]">
               <span>{mode === 'login' ? '¿No tienes una cuenta?' : '¿Ya tienes una cuenta?'}</span>
