@@ -36,20 +36,21 @@ const migrate = async () => {
     CREATE INDEX IF NOT EXISTS idx_push_usuario ON push_subscriptions(id_usuario);
   `);
 
-  const localMigrationPath = path.join(
-    __dirname,
-    '../../database/migrations/001_academic_context.sql',
-  );
-  const containerMigrationPath = path.join(
-    __dirname,
-    'migrations/001_academic_context.sql',
-  );
-  const migrationPath = fs.existsSync(localMigrationPath)
-    ? localMigrationPath
-    : containerMigrationPath;
+  const localMigrationsDir = path.join(__dirname, '../../database/migrations');
+  const containerMigrationsDir = path.join(__dirname, 'migrations');
+  const migrationsDir = fs.existsSync(localMigrationsDir)
+    ? localMigrationsDir
+    : containerMigrationsDir;
 
-  if (fs.existsSync(migrationPath)) {
-    await conexion.query(fs.readFileSync(migrationPath, 'utf8'));
+  if (fs.existsSync(migrationsDir)) {
+    const files = fs.readdirSync(migrationsDir)
+      .filter(f => f.endsWith('.sql'))
+      .sort();
+    for (const file of files) {
+      const filePath = path.join(migrationsDir, file);
+      console.log(`Ejecutando migración: ${file}`);
+      await conexion.query(fs.readFileSync(filePath, 'utf8'));
+    }
   }
 
   await seedDemoUsers();
