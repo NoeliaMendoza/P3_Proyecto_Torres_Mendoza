@@ -1,4 +1,11 @@
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Configuración compartida (base de datos, JWT, VAPID).
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+// Secretos exclusivos del backend local (por ejemplo SMTP).
+// Estos valores tienen prioridad y el archivo permanece ignorado por Git.
+dotenv.config({ path: path.resolve(__dirname, '.env'), override: true });
 const express = require('express');
 const cors = require('cors');
 const conexion = require('./database/conexion');

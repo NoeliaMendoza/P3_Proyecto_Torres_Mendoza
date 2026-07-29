@@ -25,6 +25,8 @@ services:
       dockerfile: server/Dockerfile
     container_name: espe_backend
     restart: always
+    env_file:
+      - ./server/.env
     ports:
       - "3000:3000"
     environment:

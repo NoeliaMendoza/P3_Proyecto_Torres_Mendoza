@@ -34,6 +34,13 @@ services:
       VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@espe.edu.ec}
       OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:0.5b}
+      FRONTEND_URL: ${FRONTEND_URL}
+      EMAIL_DELIVERY_MODE: ${EMAIL_DELIVERY_MODE:-smtp}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
       SEED_DEMO_USERS: ${SEED_DEMO_USERS:-false}
     extra_hosts:
       - "host.docker.internal:host-gateway"
