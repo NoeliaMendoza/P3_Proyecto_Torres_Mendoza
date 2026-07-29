@@ -19,10 +19,10 @@ export const Layout = ({ children }) => {
         }`}
       >
         <Header />
-        <main className="mx-auto w-full max-w-7xl flex-1 p-4 md:p-8">
+        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-3 py-4 sm:px-5 md:p-8">
           {children}
         </main>
-        <footer className="border-t border-[#D8EAE2] bg-white/70 px-8 py-5 text-center text-xs font-semibold text-[#52716B]">
+        <footer className="border-t border-[#D8EAE2] bg-white/70 px-4 py-5 text-center text-[11px] font-semibold text-[#52716B] sm:px-8 sm:text-xs">
           <p>© 2026 Universidad de las Fuerzas Armadas ESPE · ESPEConnect</p>
         </footer>
       </div>

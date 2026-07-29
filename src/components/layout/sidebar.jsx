@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Avatar, Button, Chip } from '@heroui/react';
 import {
   HiAcademicCap,
@@ -27,7 +27,8 @@ const BASE_LINKS = [
 
 export const Sidebar = () => {
   const { usuario, logout } = useAuthStore();
-  const { sidebarOpen, toggleSidebar } = useUIStore();
+  const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
+  const location = useLocation();
   const links = usuario?.rol === 'admin'
     ? [
         ...BASE_LINKS,
@@ -37,11 +38,22 @@ export const Sidebar = () => {
     : BASE_LINKS;
 
   return (
-    <aside
-      className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-white/10 bg-[#036666] text-white shadow-[16px_0_40px_rgba(3,102,102,0.10)] transition-all duration-300 ${
-        sidebarOpen ? 'w-64' : 'w-20'
-      }`}
-    >
+    <>
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Cerrar menú lateral"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-[#024E50]/45 backdrop-blur-[2px] md:hidden"
+        />
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(18rem,calc(100vw-2rem))] flex-col border-r border-white/10 bg-[#036666] text-white shadow-[16px_0_40px_rgba(3,102,102,0.18)] transition-[width,transform] duration-300 md:z-40 ${
+          sidebarOpen
+            ? 'translate-x-0 md:w-64'
+            : '-translate-x-full md:w-20 md:translate-x-0'
+        }`}
+      >
       <div className="flex h-20 items-center justify-between border-b border-white/10 px-4">
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#99E2B4] text-[#036666] shadow-lg shadow-black/10">
@@ -95,6 +107,9 @@ export const Sidebar = () => {
           <NavLink
             key={to}
             to={to}
+            onClick={() => {
+              if (location.pathname !== to && window.innerWidth < 768) setSidebarOpen(false);
+            }}
             title={!sidebarOpen ? label : undefined}
             className={({ isActive }) =>
               `flex items-center gap-3.5 rounded-2xl px-4 py-3 text-xs font-bold transition-all ${
@@ -120,6 +135,7 @@ export const Sidebar = () => {
           {sidebarOpen && 'Cerrar sesión'}
         </Button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };

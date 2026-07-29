@@ -93,10 +93,10 @@ export const DashboardPages = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       {/* Welcome Banner (Botanical dark teal surface matching reference image) */}
-      <Card className="relative overflow-hidden rounded-[32px] border border-[#248277] bg-[#036666] text-white shadow-[0_24px_60px_rgba(3,102,102,0.18)]">
-        <CardContent className="p-6 md:p-10">
+      <Card className="relative overflow-hidden rounded-3xl border border-[#248277] bg-[#036666] text-white shadow-[0_24px_60px_rgba(3,102,102,0.18)] sm:rounded-[32px]">
+        <CardContent className="p-5 sm:p-6 md:p-10">
         <div className="pointer-events-none absolute -right-20 -top-32 h-96 w-96 rounded-full bg-[#99E2B4]/20 blur-3xl" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -109,10 +109,10 @@ export const DashboardPages = () => {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             <Button
               onPress={() => navigate('/espacios')}
-              className="rounded-2xl bg-white px-6 font-extrabold text-[#036666]"
+              className="w-full rounded-2xl bg-white px-4 font-extrabold text-[#036666] sm:w-auto sm:px-6"
               startContent={<HiPlus className="h-4 w-4" />}
             >
               Nueva Reserva
@@ -120,7 +120,7 @@ export const DashboardPages = () => {
             <Button
               variant="bordered"
               onPress={() => navigate('/objetos-perdidos')}
-              className="rounded-2xl border-white/20 px-6 font-extrabold text-white"
+              className="w-full rounded-2xl border-white/20 px-4 font-extrabold text-white sm:w-auto sm:px-6"
               startContent={<HiMagnifyingGlass className="h-4 w-4 text-[#99E2B4]" />}
             >
               Objetos Perdidos
@@ -165,9 +165,9 @@ export const DashboardPages = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Academic Spaces Preview (8 cols) */}
         <div className="lg:col-span-8 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-extrabold text-[#123B38] font-heading">
+              <h2 className="text-lg font-extrabold text-[#123B38] font-heading sm:text-xl">
                 Espacios Académicos Destacados
               </h2>
               <p className="text-xs text-[#52716B] font-semibold mt-0.5">
@@ -176,7 +176,7 @@ export const DashboardPages = () => {
             </div>
             <button
               onClick={() => navigate('/espacios')}
-              className="text-xs font-extrabold text-[#358F80] hover:text-[#14746F] flex items-center gap-1 transition-colors"
+              className="shrink-0 text-[11px] font-extrabold text-[#358F80] hover:text-[#14746F] flex items-center gap-1 transition-colors sm:text-xs"
             >
               Ver todos ({espacios.length}) <HiArrowRight className="w-3.5 h-3.5" />
             </button>
