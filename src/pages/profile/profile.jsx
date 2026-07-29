@@ -66,21 +66,21 @@ export const ProfilePage = () => {
       {/* Profile Header Card with Cover */}
       <div className="bg-white rounded-[32px] border border-[#D8EAE2] shadow-xs overflow-hidden">
         {/* Cover Banner */}
-        <div className="h-44 w-full bg-[#036666] relative">
+        <div className="h-32 w-full bg-[#036666] relative sm:h-44">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#358F80]/30 via-transparent to-transparent" />
         </div>
 
         {/* User Avatar & Header Info */}
-        <div className="px-8 pb-8 relative">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 sm:-mt-14 mb-4">
+        <div className="relative px-4 pb-5 sm:px-8 sm:pb-8">
+          <div className="-mt-14 mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div className="flex flex-col sm:flex-row sm:items-end gap-4">
               <img
                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(usuario?.nombre || 'User')}&background=036666&color=fff&size=128`}
                 alt={usuario?.nombre}
-                className="w-28 h-28 rounded-[28px] object-cover border-4 border-white shadow-xl ring-2 ring-[#358F80]/40"
+                className="h-24 w-24 rounded-3xl border-4 border-white object-cover shadow-xl ring-2 ring-[#358F80]/40 sm:h-28 sm:w-28 sm:rounded-[28px]"
               />
               <div className="space-y-1">
-                <h1 className="text-2xl font-extrabold text-[#123B38] font-heading flex items-center gap-2">
+                <h1 className="flex items-start gap-2 break-words font-heading text-xl font-extrabold text-[#123B38] sm:items-center sm:text-2xl">
                   {usuario?.nombre}
                   <HiCheckCircle className="w-5 h-5 text-[#358F80]" />
                 </h1>

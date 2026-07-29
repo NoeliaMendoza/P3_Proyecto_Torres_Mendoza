@@ -46,20 +46,20 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#D8EAE2] bg-white/88 px-4 py-3 backdrop-blur-xl md:px-8">
-      <div className="mx-auto flex max-w-7xl items-center gap-4">
+      <div className="mx-auto flex max-w-7xl items-center gap-2 sm:gap-4">
         <Button
           isIconOnly
           variant="light"
           onPress={toggleSidebar}
           aria-label="Alternar menú lateral"
-          className="shrink-0 rounded-2xl text-[#036666]"
+          className="h-10 w-10 min-w-10 shrink-0 rounded-xl text-[#036666] sm:h-11 sm:w-11 sm:rounded-2xl"
         >
           <HiBars3 className="h-5 w-5" />
         </Button>
 
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#469D89]">{eyebrow}</p>
-          <h1 className="truncate font-heading text-lg font-extrabold text-[#123B38]">{title}</h1>
+        <div className="min-w-0 flex-1 md:flex-none">
+          <p className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-[#469D89] sm:block">{eyebrow}</p>
+          <h1 className="truncate font-heading text-base font-extrabold text-[#123B38] sm:text-lg">{title}</h1>
         </div>
 
         <form onSubmit={handleSearch} className="mx-auto hidden w-full max-w-md md:block">
@@ -77,7 +77,7 @@ export const Header = () => {
           />
         </form>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
           <Button
             isIconOnly
             variant="flat"
@@ -97,7 +97,7 @@ export const Header = () => {
             <Button
               variant="bordered"
               onPress={() => setDropdownOpen((open) => !open)}
-              className="h-11 gap-2 rounded-2xl border-[#D8EAE2] bg-white px-2.5 text-[#123B38]"
+              className="h-10 min-w-10 gap-2 rounded-xl border-[#D8EAE2] bg-white px-1.5 text-[#123B38] sm:h-11 sm:rounded-2xl sm:px-2.5"
             >
               <Avatar
                 size="sm"
@@ -125,7 +125,7 @@ export const Header = () => {
                   onClick={() => setDropdownOpen(false)}
                   className="fixed inset-0 z-40 cursor-default"
                 />
-                <div className="surface-card absolute right-0 z-50 mt-2 w-64 overflow-hidden p-2">
+                <div className="surface-card fixed inset-x-3 top-16 z-50 mt-2 overflow-hidden p-2 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:w-64">
                   <div className="border-b border-[#D8EAE2] px-3 py-3">
                     <p className="truncate text-sm font-extrabold text-[#123B38]">{usuario?.nombre}</p>
                     <p className="truncate text-xs text-[#52716B]">{usuario?.correo}</p>

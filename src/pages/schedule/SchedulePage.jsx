@@ -1,7 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { HiClock, HiAcademicCap, HiPlusCircle } from 'react-icons/hi2';
+import { HiClock, HiPlusCircle } from 'react-icons/hi2';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../api/axios';
 import AgregarMateriaModal from '../../components/schedule/AgregarMateriaModal';
@@ -18,7 +17,10 @@ const BLOQUES = [
 const obtenerMiHorario = async () => (await api.get('/horarios/mi-horario')).data;
 
 const SchedulePage = () => {
+  const usuario = useAuthStore((s) => s.usuario);
   const contexto = useAuthStore((s) => s.contexto);
+  const esEstudiante = usuario?.rol === 'estudiante';
+  const esDocente = usuario?.rol === 'docente';
   const [showAgregar, setShowAgregar] = useState(false);
   const { data: horario = [], isLoading } = useQuery({
     queryKey: ['mi-horario'],
@@ -26,33 +28,25 @@ const SchedulePage = () => {
     staleTime: 30000,
   });
 
-  const grid = useMemo(() => {
-    const celdas = {};
-    horario.forEach(h => {
-      const dia = h.dia_semana;
-      if (!celdas[dia]) celdas[dia] = [];
-      celdas[dia].push(h);
-    });
-    return celdas;
-  }, [horario]);
-
   return (
     <div className="space-y-6">
       <div className="border-b border-[#D8EAE2] pb-5">
         <h1 className="text-2xl font-extrabold text-[#123B38] font-heading flex items-center gap-2">
           <HiClock className="w-6 h-6 text-[#358F80]" />
-          Mi Horario
+          {esDocente ? 'Mi Horario Docente' : 'Mi Horario'}
         </h1>
         <p className="text-xs text-[#52716B] font-semibold mt-1">
           {contexto?.carrera?.nombre || 'Tecnología de la Información'} &bull; {contexto?.periodo?.nombre || 'Periodo 202650'} &bull; Sede Santo Domingo
         </p>
-        <button
-          onClick={() => setShowAgregar(true)}
-          className="mt-3 flex items-center gap-1.5 bg-[#358F80] text-white rounded-xl px-4 py-2 text-[11px] font-extrabold hover:bg-[#14746F] transition-colors"
-        >
-          <HiPlusCircle className="w-4 h-4" />
-          Agregar Materia
-        </button>
+        {(esEstudiante || esDocente) && (
+          <button
+            onClick={() => setShowAgregar(true)}
+            className="mt-3 flex items-center gap-1.5 bg-[#358F80] text-white rounded-xl px-4 py-2 text-[11px] font-extrabold hover:bg-[#14746F] transition-colors"
+          >
+            <HiPlusCircle className="w-4 h-4" />
+            {esDocente ? 'Colocar Materia' : 'Agregar Materia'}
+          </button>
+        )}
       </div>
 
       {isLoading ? (
@@ -62,7 +56,9 @@ const SchedulePage = () => {
           <HiClock className="w-12 h-12 text-[#6A8881] mx-auto" />
           <h3 className="text-base font-extrabold text-[#123B38] mt-3">No hay horario disponible</h3>
           <p className="text-xs text-[#52716B] font-semibold mt-1">
-            No tienes asignaturas matriculadas o un periodo activo asignado.
+            {esDocente
+              ? 'No tienes materias asignadas o un periodo académico activo.'
+              : 'No tienes asignaturas matriculadas o un periodo activo asignado.'}
           </p>
         </div>
       ) : (
@@ -118,7 +114,14 @@ const SchedulePage = () => {
           </div>
         </div>
       )}
-      <AgregarMateriaModal isOpen={showAgregar} onClose={() => setShowAgregar(false)} horarioActual={horario} />
+      {(esEstudiante || esDocente) && (
+        <AgregarMateriaModal
+          isOpen={showAgregar}
+          onClose={() => setShowAgregar(false)}
+          horarioActual={horario}
+          rol={usuario?.rol}
+        />
+      )}
     </div>
   );
 };
