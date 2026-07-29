@@ -36,4 +36,4 @@ const validateRegistration = (body = {}) => {
   };
 };
 
-module.exports = { validateRegistration, normalizeEmail };
+module.exports = { validateRegistration, normalizeEmail, isStrongPassword };
