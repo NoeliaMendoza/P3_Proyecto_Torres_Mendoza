@@ -73,8 +73,9 @@ const seedDemoUsers = async () => {
     const userResult = await conexion.query(
       `INSERT INTO usuarios (
          email, password_hash, nombre_completo, rol,
-         codigo_estudiante, id_carrera, nivel_pao, id_docente, id_periodo_activo
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         codigo_estudiante, id_carrera, nivel_pao, id_docente, id_periodo_activo,
+         email_verified_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
        ON CONFLICT (email) DO UPDATE SET
          password_hash = EXCLUDED.password_hash,
          nombre_completo = EXCLUDED.nombre_completo,
@@ -83,7 +84,8 @@ const seedDemoUsers = async () => {
          id_carrera = COALESCE(EXCLUDED.id_carrera, usuarios.id_carrera),
          nivel_pao = COALESCE(EXCLUDED.nivel_pao, usuarios.nivel_pao),
          id_docente = COALESCE(EXCLUDED.id_docente, usuarios.id_docente),
-         id_periodo_activo = COALESCE(EXCLUDED.id_periodo_activo, usuarios.id_periodo_activo)
+         id_periodo_activo = COALESCE(EXCLUDED.id_periodo_activo, usuarios.id_periodo_activo),
+         email_verified_at = COALESCE(usuarios.email_verified_at, NOW())
        RETURNING id`,
       [
         demo.email,

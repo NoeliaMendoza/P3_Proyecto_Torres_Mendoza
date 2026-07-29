@@ -3,8 +3,90 @@ const path = require('path');
 const conexion = require('./conexion');
 const seedDemoUsers = require('./seed-demo-users');
 
+const ensureConstraint = async (table, name, definition) => {
+  const exists = await conexion.query(
+    'SELECT 1 FROM pg_constraint WHERE conname = $1',
+    [name],
+  );
+  if (!exists.rows.length) {
+    await conexion.query(`ALTER TABLE ${table} ADD CONSTRAINT ${name} ${definition}`);
+  }
+};
+
+const repairBaseConstraints = async () => {
+  const constraints = [
+    ['periodos_academicos', 'periodos_academicos_pkey', 'PRIMARY KEY (id)'],
+    ['periodos_academicos', 'periodos_academicos_codigo_key', 'UNIQUE (codigo)'],
+    ['carreras', 'carreras_pkey', 'PRIMARY KEY (id)'],
+    ['carreras', 'carreras_codigo_key', 'UNIQUE (codigo)'],
+    ['docentes', 'docentes_pkey', 'PRIMARY KEY (id)'],
+    ['docentes', 'docentes_nombre_completo_key', 'UNIQUE (nombre_completo)'],
+    ['asignaturas', 'asignaturas_pkey', 'PRIMARY KEY (id)'],
+    ['asignaturas', 'asignaturas_codigo_key', 'UNIQUE (codigo)'],
+    ['nrc', 'nrc_pkey', 'PRIMARY KEY (id)'],
+    ['tipos_espacio', 'tipos_espacio_pkey', 'PRIMARY KEY (id)'],
+    ['tipos_espacio', 'tipos_espacio_nombre_key', 'UNIQUE (nombre)'],
+    ['espacios_academicos', 'espacios_academicos_pkey', 'PRIMARY KEY (id)'],
+    ['espacios_academicos', 'espacios_academicos_codigo_key', 'UNIQUE (codigo)'],
+    ['horarios', 'horarios_pkey', 'PRIMARY KEY (id)'],
+    ['disponibilidad_espacios', 'disponibilidad_espacios_pkey', 'PRIMARY KEY (id)'],
+    ['categorias_objetos', 'categorias_objetos_pkey', 'PRIMARY KEY (id)'],
+    ['objetos_perdidos', 'objetos_perdidos_pkey', 'PRIMARY KEY (id)'],
+  ];
+
+  for (const [table, name, definition] of constraints) {
+    await ensureConstraint(table, name, definition);
+  }
+};
+
 const migrate = async () => {
+  const schemaExists = await conexion.query(
+    `SELECT to_regclass('public.usuarios') AS table_name`,
+  );
+
+  if (!schemaExists.rows[0].table_name) {
+    const localSchemaPath = path.join(__dirname, '../../database/schema.sql');
+    const containerSchemaPath = path.join(__dirname, 'schema.sql');
+    const schemaPath = fs.existsSync(localSchemaPath)
+      ? localSchemaPath
+      : containerSchemaPath;
+
+    if (!fs.existsSync(schemaPath)) {
+      throw new Error('La base está vacía y no se encontró database/schema.sql.');
+    }
+
+    console.log('Base de datos vacía: creando esquema inicial...');
+    await conexion.query(fs.readFileSync(schemaPath, 'utf8'));
+  }
+
+  await repairBaseConstraints();
+
   await conexion.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'usuarios' AND column_name = 'email_verified_at'
+      ) THEN
+        ALTER TABLE usuarios ADD COLUMN email_verified_at TIMESTAMP;
+        UPDATE usuarios SET email_verified_at = COALESCE(created_at, NOW());
+      END IF;
+    END $$;
+    CREATE TABLE IF NOT EXISTS auth_tokens (
+      id BIGSERIAL PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      purpose VARCHAR(32) NOT NULL
+        CHECK (purpose IN ('email_verification', 'password_reset')),
+      token_hash CHAR(64) NOT NULL UNIQUE,
+      expires_at TIMESTAMP NOT NULL,
+      used_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_auth_tokens_lookup
+      ON auth_tokens(token_hash, purpose, expires_at)
+      WHERE used_at IS NULL;
+    CREATE INDEX IF NOT EXISTS idx_auth_tokens_user
+      ON auth_tokens(user_id, purpose);
     CREATE TABLE IF NOT EXISTS reservas_espacios (
       id BIGSERIAL PRIMARY KEY,
       id_espacio INTEGER NOT NULL REFERENCES espacios_academicos(id) ON DELETE CASCADE,

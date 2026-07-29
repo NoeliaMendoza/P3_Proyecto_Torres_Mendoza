@@ -3,7 +3,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. USUARIOS
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE usuarios (
 );
 
 -- 2. PERIODOS ACADÉMICOS
-CREATE TABLE periodos_academicos (
+CREATE TABLE IF NOT EXISTS periodos_academicos (
     id SERIAL PRIMARY KEY,
     codigo VARCHAR(20) UNIQUE NOT NULL,
     nombre VARCHAR(255) NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE periodos_academicos (
 );
 
 -- 3. CARRERAS
-CREATE TABLE carreras (
+CREATE TABLE IF NOT EXISTS carreras (
     id SERIAL PRIMARY KEY,
     codigo VARCHAR(20) UNIQUE NOT NULL,
     nombre VARCHAR(255) NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE carreras (
 );
 
 -- 4. DOCENTES
-CREATE TABLE docentes (
+CREATE TABLE IF NOT EXISTS docentes (
     id SERIAL PRIMARY KEY,
     nombre_completo VARCHAR(255) NOT NULL,
     email VARCHAR(255),
@@ -43,7 +43,7 @@ CREATE TABLE docentes (
 );
 
 -- 5. ASIGNATURAS
-CREATE TABLE asignaturas (
+CREATE TABLE IF NOT EXISTS asignaturas (
     id SERIAL PRIMARY KEY,
     codigo VARCHAR(50) UNIQUE NOT NULL,
     nombre VARCHAR(255) NOT NULL,
@@ -51,7 +51,7 @@ CREATE TABLE asignaturas (
 );
 
 -- 6. NRC (SECCIONES)
-CREATE TABLE nrc (
+CREATE TABLE IF NOT EXISTS nrc (
     id SERIAL PRIMARY KEY,
     nrc VARCHAR(20) NOT NULL,
     id_asignatura INTEGER NOT NULL REFERENCES asignaturas(id),
@@ -64,7 +64,7 @@ CREATE TABLE nrc (
 );
 
 -- 7. TIPOS DE ESPACIO
-CREATE TABLE tipos_espacio (
+CREATE TABLE IF NOT EXISTS tipos_espacio (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     descripcion TEXT,
@@ -72,7 +72,7 @@ CREATE TABLE tipos_espacio (
 );
 
 -- 8. ESPACIOS ACADÉMICOS
-CREATE TABLE espacios_academicos (
+CREATE TABLE IF NOT EXISTS espacios_academicos (
     id SERIAL PRIMARY KEY,
     codigo VARCHAR(50) UNIQUE NOT NULL,
     nombre VARCHAR(255) NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE espacios_academicos (
 );
 
 -- 9. HORARIOS
-CREATE TABLE horarios (
+CREATE TABLE IF NOT EXISTS horarios (
     id SERIAL PRIMARY KEY,
     id_nrc INTEGER NOT NULL REFERENCES nrc(id) ON DELETE CASCADE,
     id_espacio INTEGER NOT NULL REFERENCES espacios_academicos(id),
@@ -103,7 +103,7 @@ CREATE TABLE horarios (
 );
 
 -- 10. DISPONIBILIDAD MANUAL
-CREATE TABLE disponibilidad_espacios (
+CREATE TABLE IF NOT EXISTS disponibilidad_espacios (
     id SERIAL PRIMARY KEY,
     id_espacio INTEGER NOT NULL REFERENCES espacios_academicos(id) ON DELETE CASCADE,
     fecha DATE,
@@ -116,7 +116,7 @@ CREATE TABLE disponibilidad_espacios (
 );
 
 -- 11. CATEGORÍAS DE OBJETOS
-CREATE TABLE categorias_objetos (
+CREATE TABLE IF NOT EXISTS categorias_objetos (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     icono VARCHAR(50),
@@ -124,7 +124,7 @@ CREATE TABLE categorias_objetos (
 );
 
 -- 12. OBJETOS PERDIDOS/ENCONTRADOS
-CREATE TABLE objetos_perdidos (
+CREATE TABLE IF NOT EXISTS objetos_perdidos (
     id SERIAL PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
     descripcion TEXT NOT NULL,
@@ -145,18 +145,18 @@ CREATE TABLE objetos_perdidos (
 );
 
 -- ÍNDICES
-CREATE INDEX idx_nrc_periodo ON nrc(id_periodo);
-CREATE INDEX idx_nrc_asignatura ON nrc(id_asignatura);
-CREATE INDEX idx_horarios_espacio ON horarios(id_espacio);
-CREATE INDEX idx_horarios_dia ON horarios(dia_semana);
-CREATE INDEX idx_objetos_tipo ON objetos_perdidos(tipo);
-CREATE INDEX idx_objetos_estado ON objetos_perdidos(estado);
-CREATE INDEX idx_objetos_categoria ON objetos_perdidos(id_categoria);
-CREATE INDEX idx_espacios_tipo ON espacios_academicos(id_tipo);
-CREATE INDEX idx_espacios_estado ON espacios_academicos(estado);
+CREATE INDEX IF NOT EXISTS idx_nrc_periodo ON nrc(id_periodo);
+CREATE INDEX IF NOT EXISTS idx_nrc_asignatura ON nrc(id_asignatura);
+CREATE INDEX IF NOT EXISTS idx_horarios_espacio ON horarios(id_espacio);
+CREATE INDEX IF NOT EXISTS idx_horarios_dia ON horarios(dia_semana);
+CREATE INDEX IF NOT EXISTS idx_objetos_tipo ON objetos_perdidos(tipo);
+CREATE INDEX IF NOT EXISTS idx_objetos_estado ON objetos_perdidos(estado);
+CREATE INDEX IF NOT EXISTS idx_objetos_categoria ON objetos_perdidos(id_categoria);
+CREATE INDEX IF NOT EXISTS idx_espacios_tipo ON espacios_academicos(id_tipo);
+CREATE INDEX IF NOT EXISTS idx_espacios_estado ON espacios_academicos(estado);
 
 -- VISTA: Disponibilidad en tiempo real
-CREATE VIEW vista_disponibilidad AS
+CREATE OR REPLACE VIEW vista_disponibilidad AS
 SELECT e.id, e.codigo, e.nombre AS nombre_espacio, te.nombre AS tipo_espacio,
        e.capacidad, e.edificio, e.piso, e.estado,
        CASE WHEN h.id IS NOT NULL THEN 'ocupado' ELSE 'disponible' END AS estado_actual,
@@ -170,7 +170,7 @@ LEFT JOIN asignaturas a ON n.id_asignatura = a.id
 LEFT JOIN docentes d ON n.id_docente = d.id;
 
 -- VISTA: Horarios completa
-CREATE VIEW vista_horarios_completa AS
+CREATE OR REPLACE VIEW vista_horarios_completa AS
 SELECT h.id, n.nrc, a.codigo AS codigo_asignatura, a.nombre AS asignatura, a.creditos,
        d.nombre_completo AS docente, e.codigo AS codigo_espacio, e.nombre AS nombre_espacio,
        te.nombre AS tipo_espacio, h.dia_semana,
