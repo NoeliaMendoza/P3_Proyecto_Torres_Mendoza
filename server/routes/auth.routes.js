@@ -9,8 +9,15 @@ const {
   normalizeEmail,
   validateRegistration,
 } = require('../validators/registration.validator');
-const { PURPOSES, createToken, consumeToken } = require('../services/auth-token.service');
+const {
+  PURPOSES,
+  createToken,
+  consumeToken,
+  findVerifiedTokenUser,
+} = require('../services/auth-token.service');
 const { sendPasswordResetEmail, sendVerificationEmail } = require('../services/email.service');
+const { dispatchEmail } = require('../services/email-dispatch.service');
+const { registerPendingUser } = require('../services/registration.service');
 
 const registerLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -34,53 +41,21 @@ router.post('/register', registerLimiter, async (req, res) => {
     }
     const { nombre, correo, password } = validation.values;
 
-    const existe = await conexion.query(
-      'SELECT id, email_verified_at FROM usuarios WHERE email = $1',
-      [correo],
-    );
-    if (existe.rows[0] && existe.rows[0].email_verified_at)
-      return res.status(409).json({
-        mensaje: 'El correo ya se encuentra registrado.',
-        errores: { correo: 'Ya existe una cuenta con este correo institucional.' },
-      });
-
-    const hash = await bcrypt.hash(password, 10);
-    const r = existe.rows.length
-      ? await conexion.query(
-        `UPDATE usuarios
-         SET password_hash = $1, nombre_completo = $2, updated_at = NOW()
-         WHERE id = $3
-         RETURNING id`,
-        [hash, nombre, existe.rows[0].id],
-      )
-      : await conexion.query(
-        `INSERT INTO usuarios (email, password_hash, nombre_completo, rol)
-         VALUES ($1,$2,$3,'estudiante')
-         RETURNING id`,
-        [correo, hash, nombre],
-      );
-    const verificationToken = await createToken(
-      r.rows[0].id,
-      PURPOSES.EMAIL_VERIFICATION,
-      24 * 60,
-    );
-    try {
-      await sendVerificationEmail(correo, verificationToken);
-    } catch (_emailErr) {
-      console.warn('[registro] No se pudo enviar el correo de verificación');
-    }
+    const { verificationToken } = await registerPendingUser({ nombre, correo, password });
+    dispatchEmail('verificacion', () => sendVerificationEmail(correo, verificationToken));
     res.status(201).json({
-      mensaje: 'Cuenta creada. Revisa tu correo institucional para activarla.',
+      mensaje: 'Cuenta creada. El correo de verificación está en proceso y puede tardar unos minutos.',
       requiere_verificacion: true,
+      correo_programado: true,
     });
   } catch (error) {
-    if (error.code === '23505') {
+    console.error('[register] Error:', error.message);
+    if (error.code === '23505' || error.code === 'EMAIL_ALREADY_REGISTERED') {
       return res.status(409).json({
         mensaje: 'El correo ya se encuentra registrado.',
         errores: { correo: 'Ya existe una cuenta con este correo institucional.' },
       });
     }
-    console.error(error);
     res.status(500).json({ mensaje: 'Error interno del servidor.' });
   }
 });
@@ -124,7 +99,16 @@ router.post('/login', async (req, res) => {
 router.get('/verificar-correo', emailLimiter, async (req, res) => {
   try {
     const userId = await consumeToken(req.query.token, PURPOSES.EMAIL_VERIFICATION);
-    if (!userId) return res.status(400).json({ mensaje: 'El enlace es inválido o ha caducado.' });
+    if (!userId) {
+      const alreadyVerified = await findVerifiedTokenUser(
+        req.query.token,
+        PURPOSES.EMAIL_VERIFICATION,
+      );
+      if (alreadyVerified) {
+        return res.json({ mensaje: 'El correo ya estaba verificado. Puedes iniciar sesión.' });
+      }
+      return res.status(400).json({ mensaje: 'El enlace es inválido o ha caducado.' });
+    }
 
     await conexion.query(
       `UPDATE usuarios SET updated_at = NOW(),
@@ -146,12 +130,12 @@ router.post('/reenviar-verificacion', emailLimiter, async (req, res) => {
     if (!correo) return res.status(400).json({ mensaje: 'El correo es obligatorio.' });
 
     const result = await conexion.query(
-      'SELECT id, COALESCE(email_verified_at, NOW()) AS email_verified_at FROM usuarios WHERE email = $1',
+      'SELECT id, email_verified_at FROM usuarios WHERE email = $1',
       [correo],
     );
     if (result.rows[0] && !result.rows[0].email_verified_at) {
       const token = await createToken(result.rows[0].id, PURPOSES.EMAIL_VERIFICATION, 24 * 60);
-      await sendVerificationEmail(correo, token);
+      dispatchEmail('reenvio-verificacion', () => sendVerificationEmail(correo, token));
     }
     res.json({ mensaje: genericMessage });
   } catch (error) {
@@ -172,7 +156,7 @@ router.post('/recuperar-password', emailLimiter, async (req, res) => {
     );
     if (result.rows[0]) {
       const token = await createToken(result.rows[0].id, PURPOSES.PASSWORD_RESET, 30);
-      await sendPasswordResetEmail(correo, token);
+      dispatchEmail('recuperacion', () => sendPasswordResetEmail(correo, token));
     }
     res.json({ mensaje: genericMessage });
   } catch (error) {
