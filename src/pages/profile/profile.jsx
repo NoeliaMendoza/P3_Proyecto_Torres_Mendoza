@@ -11,6 +11,7 @@ import {
   HiEnvelope, 
   HiBuildingLibrary,
   HiCheckCircle,
+  HiCheckBadge,
   HiClock,
   HiShieldCheck
 } from 'react-icons/hi2';
@@ -19,6 +20,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { obtenerMisReservas } from '../../services/reservas.services';
 import { obtenerContextoUsuario } from '../../services/auth.services';
+import { marcarComoEncontrado } from '../../services/objetos.services';
 
 export const ProfilePage = () => {
   const [searchParams] = useSearchParams();
@@ -28,7 +30,7 @@ export const ProfilePage = () => {
   const contexto = useAuthStore((s) => s.contexto);
   const setContexto = useAuthStore((s) => s.setContexto);
   const setUsuario = useAuthStore((s) => s.setUsuario);
-  const { reservas, objetos, setReservas } = useUIStore();
+  const { reservas, objetos, setReservas, setObjetos } = useUIStore();
 
   const { data: reservasAPI } = useQuery({
     queryKey: ['reservas', 'mis'],
@@ -255,6 +257,24 @@ export const ProfilePage = () => {
                   <h4 className="text-xs font-extrabold text-[#123B38] truncate">{o.nombre}</h4>
                   <p className="text-[11px] text-[#52716B] font-semibold truncate">{o.lugar} &bull; {o.fecha}</p>
                 </div>
+                {o.estado === 'abierto' && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await marcarComoEncontrado(o.id);
+                        toast.success('Publicación marcada como encontrada');
+                        setObjetos(objetos.filter((obj) => obj.id !== o.id));
+                      } catch (error) {
+                        toast.error(error.response?.data?.mensaje || 'Error al marcar como encontrado');
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-full text-[10px] font-extrabold bg-amber-600 hover:bg-amber-700 text-white shrink-0"
+                  >
+                    <HiCheckBadge className="w-3.5 h-3.5 inline mr-1" />
+                    Encontrado
+                  </button>
+                )}
               </div>
             ))}
           </div>;
