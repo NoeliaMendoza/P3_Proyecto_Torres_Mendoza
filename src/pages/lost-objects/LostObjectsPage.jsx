@@ -28,6 +28,7 @@ const mapearObjeto = (api) => api.nombre ? api : ({
   reportante_contacto: api.informacion_contacto || 'No disponible',
   es_reclamado: api.es_reclamado,
   id_categoria: api.id_categoria,
+  id_reportante: api.id_reportante,
 });
 
 export const LostObjectsPages = () => {

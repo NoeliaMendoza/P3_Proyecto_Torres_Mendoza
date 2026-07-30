@@ -26,6 +26,11 @@ export const obtenerObjetos = async (params) => {
   }
 };
 
+export const marcarComoEncontrado = async (id) => {
+  const { data } = await api.patch(`/objetos-perdidos/${id}/marcar-encontrado`);
+  return data;
+};
+
 export const crearObjeto = async (data) => {
   const payload = {
     titulo: data.nombre,

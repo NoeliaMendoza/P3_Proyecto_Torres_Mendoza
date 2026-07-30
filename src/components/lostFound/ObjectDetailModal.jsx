@@ -11,11 +11,26 @@ import {
   HiChatBubbleLeftEllipsis
 } from 'react-icons/hi2';
 import { toast } from 'sonner';
+import { useAuthStore } from '../../store/authStore';
+import { marcarComoEncontrado } from '../../services/objetos.services';
 
 export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
   if (!isOpen || !objeto) return null;
 
   const isEncontrado = objeto.tipo === 'encontrado';
+  const usuario = useAuthStore((s) => s.usuario);
+  const esMiPublicacion = usuario?.id === objeto.id_reportante;
+  const puedeMarcarEncontrado = esMiPublicacion && objeto.estado === 'abierto';
+
+  const handleMarcarEncontrado = async () => {
+    try {
+      await marcarComoEncontrado(objeto.id);
+      toast.success('Objeto marcado como encontrado');
+      onClose();
+    } catch (error) {
+      toast.error(error.response?.data?.mensaje || 'No se pudo marcar como encontrado');
+    }
+  };
 
   const handleContact = () => {
     toast.success('Notificación enviada al reportante', {
@@ -127,7 +142,7 @@ export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
             </div>
 
             {/* Action buttons */}
-            <div className="pt-4 border-t border-[#D8EAE2] flex items-center justify-end gap-3">
+            <div className="pt-4 border-t border-[#D8EAE2] flex items-center justify-end gap-3 flex-wrap">
               <button
                 type="button"
                 onClick={onClose}
@@ -135,6 +150,16 @@ export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
               >
                 Cerrar
               </button>
+              {puedeMarcarEncontrado && (
+                <button
+                  type="button"
+                  onClick={handleMarcarEncontrado}
+                  className="px-6 py-2.5 rounded-full text-xs font-extrabold bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20 flex items-center gap-2 transition-all"
+                >
+                  <HiCheckBadge className="w-4 h-4" />
+                  Marcar como encontrado
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleContact}

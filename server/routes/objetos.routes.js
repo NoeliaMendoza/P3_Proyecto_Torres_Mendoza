@@ -81,6 +81,18 @@ router.delete('/:id', authentication, async (req, res) => {
   } catch (error) { res.status(500).json({ mensaje: 'Error interno del servidor.' }); }
 });
 
+router.patch('/:id/marcar-encontrado', authentication, async (req, res) => {
+  try {
+    const r = await conexion.query(
+      `UPDATE objetos_perdidos SET estado='resuelto', updated_at=NOW()
+       WHERE id=$1 AND id_reportante=$2 AND estado='abierto' RETURNING *`,
+      [req.params.id, req.usuario.id]
+    );
+    if (r.rows.length === 0) return res.status(400).json({ mensaje: 'No se puede marcar como encontrado.' });
+    res.json({ mensaje: 'Objeto marcado como encontrado.', objeto: r.rows[0] });
+  } catch (error) { res.status(500).json({ mensaje: 'Error interno del servidor.' }); }
+});
+
 router.post('/:id/reclamar', authentication, async (req, res) => {
   try {
     const r = await conexion.query(
