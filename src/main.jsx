@@ -24,9 +24,19 @@ if (import.meta.env.PROD) {
   });
   window.__espePwaUpdate = () => updateSW(true);
 } else if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    registrations.forEach((registration) => registration.unregister());
-  });
+  navigator.serviceWorker.getRegistrations()
+    .then(async (registrations) => {
+      const pushWorker = registrations.find((registration) =>
+        registration.active?.scriptURL.endsWith('/push-handler.js')
+      );
+      await Promise.all(
+        registrations
+          .filter((registration) => registration !== pushWorker)
+          .map((registration) => registration.unregister())
+      );
+      return pushWorker || navigator.serviceWorker.register('/push-handler.js', { scope: '/' });
+    })
+    .catch((error) => console.warn('No se pudo preparar el worker de notificaciones:', error));
   if ('caches' in window) {
     caches.keys().then((keys) => {
       keys
