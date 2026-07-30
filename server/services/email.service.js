@@ -5,6 +5,11 @@ const deliveryMode = process.env.EMAIL_DELIVERY_MODE
   || (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD ? 'smtp' : 'console');
 
 let transporter;
+let emailStatus = {
+  mode: deliveryMode,
+  ready: deliveryMode === 'console',
+  lastError: null,
+};
 
 const getTransporter = () => {
   if (transporter) return transporter;
@@ -27,9 +32,38 @@ const getTransporter = () => {
     },
     disableFileAccess: true,
     disableUrlAccess: true,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 30_000,
   });
   return transporter;
 };
+
+const verifyEmailTransport = async () => {
+  if (deliveryMode === 'console') {
+    console.info('[email] Modo console activo; SMTP no se utilizará.');
+    return emailStatus;
+  }
+  if (deliveryMode !== 'smtp') {
+    throw new Error('EMAIL_DELIVERY_MODE debe ser smtp o console.');
+  }
+
+  try {
+    await getTransporter().verify();
+    emailStatus = { mode: deliveryMode, ready: true, lastError: null };
+    console.info(`[email] SMTP listo para ${process.env.SMTP_USER}.`);
+    return emailStatus;
+  } catch (error) {
+    emailStatus = {
+      mode: deliveryMode,
+      ready: false,
+      lastError: { code: error.code || 'SMTP_ERROR', message: error.message },
+    };
+    throw error;
+  }
+};
+
+const getEmailStatus = () => ({ ...emailStatus });
 
 const send = async ({ to, subject, text, html }) => {
   if (deliveryMode === 'console') {
@@ -103,4 +137,9 @@ const sendPasswordResetEmail = async (email, token) => {
   });
 };
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail };
+module.exports = {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  verifyEmailTransport,
+  getEmailStatus,
+};

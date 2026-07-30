@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "smtp:check": "node scripts/check-smtp.js",
     "vapid:generate": "node scripts/configure-vapid.js"
   },
   "dependencies": {
