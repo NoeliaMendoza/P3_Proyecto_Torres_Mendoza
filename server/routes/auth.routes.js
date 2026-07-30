@@ -64,7 +64,11 @@ router.post('/register', registerLimiter, async (req, res) => {
       PURPOSES.EMAIL_VERIFICATION,
       24 * 60,
     );
-    await sendVerificationEmail(correo, verificationToken);
+    try {
+      await sendVerificationEmail(correo, verificationToken);
+    } catch (_emailErr) {
+      console.warn('[registro] No se pudo enviar el correo de verificación');
+    }
     res.status(201).json({
       mensaje: 'Cuenta creada. Revisa tu correo institucional para activarla.',
       requiere_verificacion: true,

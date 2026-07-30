@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 
 const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
 const deliveryMode = process.env.EMAIL_DELIVERY_MODE
-  || (process.env.NODE_ENV === 'production' ? 'smtp' : 'console');
+  || (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD ? 'smtp' : 'console');
 
 let transporter;
 
