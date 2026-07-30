@@ -49,7 +49,7 @@ export const crearObjeto = async (data) => {
   };
 
   try {
-    const response = await api.post('/objetos-perdidos', payload);
+    const response = await api.post('/objetos-perdidos', payload, { timeout: 45000 });
     return response.data;
   } catch (error) {
     if (!isNetworkError(error)) throw error;
