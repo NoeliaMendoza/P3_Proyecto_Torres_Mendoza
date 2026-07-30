@@ -85,6 +85,7 @@ export const LoginPages = () => {
   const [loading, setLoading] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
   const [verificationPending, setVerificationPending] = useState(false);
   const navigate = useNavigate();
   const saveSession = useAuthStore((state) => state.login);
@@ -131,13 +132,13 @@ export const LoginPages = () => {
 
     setLoading(true);
     try {
-      await registerUser(
+      const registration = await registerUser(
         validation.values.nombre,
         validation.values.correo,
         validation.values.password,
       );
       toast.success('Cuenta creada correctamente', {
-        description: 'Revisa tu correo institucional y abre el enlace para activar tu cuenta.',
+        description: registration.mensaje,
       });
       setMode('login');
       setNombre('');
@@ -147,8 +148,23 @@ export const LoginPages = () => {
     } catch (error) {
       const backendErrors = error.response?.data?.errores;
       if (backendErrors) setRegisterErrors((current) => ({ ...current, ...backendErrors }));
-      toast.error('No pudimos crear la cuenta', {
-        description: error.response?.data?.mensaje || 'Revisa los datos e inténtalo nuevamente.',
+
+      const status = error.response?.status;
+      const isTimeout = error.code === 'ECONNABORTED';
+      const isConnectionError = !error.response;
+      const title = isConnectionError
+        ? 'El servidor no está disponible'
+        : status === 429
+          ? 'Demasiados intentos'
+          : 'No pudimos crear la cuenta';
+      const description = isTimeout
+        ? 'El servidor tardó demasiado en responder. Comprueba que el backend siga ejecutándose en el puerto 3000.'
+        : isConnectionError
+          ? 'Levanta el backend con "cd server" y "npm run dev", y déjalo ejecutándose mientras usas la aplicación.'
+          : error.response?.data?.mensaje || 'Revisa los datos e inténtalo nuevamente.';
+
+      toast.error(title, {
+        description,
       });
     } finally {
       setLoading(false);
@@ -157,6 +173,8 @@ export const LoginPages = () => {
 
   const handleRecovery = async (event) => {
     event.preventDefault();
+    if (recoveryLoading) return;
+    setRecoveryLoading(true);
     try {
       await recperarPasswordService(recoveryEmail);
       toast.success('Solicitud recibida', {
@@ -165,7 +183,15 @@ export const LoginPages = () => {
       setRecoveryOpen(false);
       setRecoveryEmail('');
     } catch (error) {
-      toast.error(error.message || 'No fue posible procesar la solicitud.');
+      const retryAfter = Number(error.response?.headers?.['retry-after']);
+      const retryMessage = retryAfter
+        ? ` Inténtalo nuevamente en ${Math.max(1, Math.ceil(retryAfter / 60))} minuto(s).`
+        : '';
+      toast.error('No fue posible enviar la solicitud', {
+        description: `${error.response?.data?.mensaje || 'Revisa la conexión e inténtalo nuevamente.'}${retryMessage}`,
+      });
+    } finally {
+      setRecoveryLoading(false);
     }
   };
 
@@ -472,8 +498,13 @@ export const LoginPages = () => {
                   icon={HiEnvelope}
                   required
                 />
-                <Button type="submit" className="w-full rounded-2xl bg-[#036666] font-bold text-white">
-                  Enviar solicitud
+                <Button
+                  type="submit"
+                  isLoading={recoveryLoading}
+                  isDisabled={recoveryLoading}
+                  className="w-full rounded-2xl bg-[#036666] font-bold text-white"
+                >
+                  {recoveryLoading ? 'Enviando…' : 'Enviar solicitud'}
                 </Button>
               </form>
             </motion.div>
