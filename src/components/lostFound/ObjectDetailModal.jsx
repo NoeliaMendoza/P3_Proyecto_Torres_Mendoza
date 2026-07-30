@@ -53,7 +53,7 @@ export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
           </button>
 
           {/* Full Image Preview */}
-          <div className="relative h-64 w-full bg-[#036666]">
+          <div className="relative h-48 sm:h-64 w-full bg-[#036666]">
             <img
               src={objeto.imagen}
               alt={objeto.nombre}
@@ -82,7 +82,7 @@ export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
 
           {/* Content Body */}
           <div className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-[#F4FAF7] border border-[#D8EAE2] text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-[#F4FAF7] border border-[#D8EAE2] text-xs">
               <div className="space-y-1">
                 <span className="text-[#52716B] font-bold text-[10px] uppercase tracking-wider block">Categoría</span>
                 <span className="font-extrabold text-[#123B38] flex items-center gap-1">

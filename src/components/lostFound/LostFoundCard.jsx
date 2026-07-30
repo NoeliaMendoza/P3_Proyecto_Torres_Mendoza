@@ -19,7 +19,7 @@ export const LostFoundCard = ({ objeto, onVerDetalle }) => {
       className="bg-white rounded-[28px] border border-[#D8EAE2] overflow-hidden shadow-xs hover:shadow-xl transition-all flex flex-col group"
     >
       {/* Image container */}
-      <div className="relative h-52 w-full overflow-hidden bg-[#036666]">
+      <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-[#036666]">
         <img
           src={objeto.imagen}
           alt={objeto.nombre}

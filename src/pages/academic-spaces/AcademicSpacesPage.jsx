@@ -93,9 +93,9 @@ export const AcademicSpacesPages = () => {
       </div>
 
       {/* Search & Filters Bar */}
-      <div className="p-4 rounded-[28px] bg-white border border-[#D8EAE2] shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+      <div className="p-4 rounded-[28px] bg-white border border-[#D8EAE2] shadow-xs space-y-3">
         {/* Search */}
-        <div className="md:col-span-5 relative">
+        <div className="relative">
           <HiMagnifyingGlass className="w-4 h-4 text-[#52716B] absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -106,33 +106,33 @@ export const AcademicSpacesPages = () => {
           />
         </div>
 
-        {/* Filter Tipo */}
-        <div className="md:col-span-4 flex items-center gap-2">
-          <HiFunnel className="w-4 h-4 text-[#52716B] shrink-0" />
-          <select
-            value={selectedTipo}
-            onChange={(e) => setSelectedTipo(e.target.value)}
-            className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-full text-xs font-bold text-[#123B38] focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
-          >
-            <option value="todos">Todos los Tipos</option>
-            <option value="Aula">Aulas</option>
-            <option value="Laboratorio">Laboratorios</option>
-            <option value="Virtual">Virtual</option>
-          </select>
-        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center gap-2">
+            <HiFunnel className="w-4 h-4 text-[#52716B] shrink-0" />
+            <select
+              value={selectedTipo}
+              onChange={(e) => setSelectedTipo(e.target.value)}
+              className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-full text-xs font-bold text-[#123B38] focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
+            >
+              <option value="todos">Todos los Tipos</option>
+              <option value="Aula">Aulas</option>
+              <option value="Laboratorio">Laboratorios</option>
+              <option value="Virtual">Virtual</option>
+            </select>
+          </div>
 
-        {/* Filter Estado */}
-        <div className="md:col-span-3">
-          <select
-            value={selectedEstado}
-            onChange={(e) => setSelectedEstado(e.target.value)}
-            className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-full text-xs font-bold text-[#123B38] focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
-          >
-            <option value="todos">Todos los Estados</option>
-            <option value="disponible">Solo Disponibles</option>
-            <option value="ocupado">Reservados</option>
-            <option value="mantenimiento">En Mantenimiento</option>
-          </select>
+          <div>
+            <select
+              value={selectedEstado}
+              onChange={(e) => setSelectedEstado(e.target.value)}
+              className="w-full px-4 py-2.5 bg-[#F4FAF7] border border-[#D8EAE2] rounded-full text-xs font-bold text-[#123B38] focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80]"
+            >
+              <option value="todos">Todos los Estados</option>
+              <option value="disponible">Solo Disponibles</option>
+              <option value="ocupado">Reservados</option>
+              <option value="mantenimiento">En Mantenimiento</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -109,7 +109,7 @@ export const DashboardPages = () => {
             </p>
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+          <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             <Button
               onPress={() => navigate('/espacios')}
               className="w-full rounded-2xl bg-white px-4 font-extrabold text-[#036666] sm:w-auto sm:px-6"

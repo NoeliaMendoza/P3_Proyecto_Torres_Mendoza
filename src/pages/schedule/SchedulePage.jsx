@@ -61,8 +61,8 @@ const SchedulePage = () => {
               : 'No tienes asignaturas matriculadas o un periodo activo asignado.'}
           </p>
         </div>
-      ) : (
-        <div className="bg-white rounded-[32px] border border-[#D8EAE2] shadow-xs overflow-hidden">
+      ) : (<>
+          <div className="hidden sm:block bg-white rounded-[32px] border border-[#D8EAE2] shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-[#123B38]">
               <thead className="bg-[#F4FAF7] border-b border-[#D8EAE2] font-extrabold uppercase tracking-wider text-[10px] text-[#52716B]">
@@ -113,6 +113,39 @@ const SchedulePage = () => {
             </table>
           </div>
         </div>
+
+        <div className="sm:hidden space-y-4">
+          {DIAS.map((dia, diaIdx) => {
+            const diaNum = diaIdx + 1;
+            const clasesDelDia = horario.filter(h => h.dia_semana === diaNum);
+            if (clasesDelDia.length === 0) return null;
+            return (
+              <div key={dia} className="bg-white rounded-3xl border border-[#D8EAE2] shadow-xs overflow-hidden">
+                <div className="bg-[#036666] px-4 py-3">
+                  <h3 className="text-sm font-extrabold text-white">{dia}</h3>
+                </div>
+                <div className="divide-y divide-[#D8EAE2]">
+                  {clasesDelDia.map((clase, idx) => (
+                    <div key={idx} className="p-4 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-extrabold text-[#123B38]">{clase.asignatura_codigo}</span>
+                        <span className="text-[10px] font-bold text-[#358F80] whitespace-nowrap">
+                          {clase.hora_inicio.slice(0, 5)} - {clase.hora_fin.slice(0, 5)}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#52716B] font-semibold">{clase.asignatura}</p>
+                      <div className="flex items-center gap-3 text-[10px] text-[#6A8881] font-medium">
+                        <span>{clase.codigo_espacio}</span>
+                        {clase.docente && <span>&middot; {clase.docente}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        </>
       )}
       {(esEstudiante || esDocente) && (
         <AgregarMateriaModal

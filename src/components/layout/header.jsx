@@ -57,9 +57,9 @@ export const Header = () => {
           <HiBars3 className="h-5 w-5" />
         </Button>
 
-        <div className="min-w-0 flex-1 md:flex-none">
+        <div className="min-w-0 flex-1">
           <p className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-[#469D89] sm:block">{eyebrow}</p>
-          <h1 className="truncate font-heading text-base font-extrabold text-[#123B38] sm:text-lg">{title}</h1>
+          <h1 className="truncate font-heading text-sm font-extrabold text-[#123B38] sm:text-lg">{title}</h1>
         </div>
 
         <form onSubmit={handleSearch} className="mx-auto hidden w-full max-w-md md:block">
@@ -76,6 +76,15 @@ export const Header = () => {
             }}
           />
         </form>
+
+        <button
+          type="button"
+          onClick={() => navigate('/espacios')}
+          aria-label="Buscar"
+          className="flex h-10 w-10 min-w-10 items-center justify-center rounded-xl bg-[#EAF6F0] text-[#036666] md:hidden"
+        >
+          <HiMagnifyingGlass className="h-5 w-5" />
+        </button>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
           <Button
@@ -125,7 +134,7 @@ export const Header = () => {
                   onClick={() => setDropdownOpen(false)}
                   className="fixed inset-0 z-40 cursor-default"
                 />
-                <div className="surface-card fixed inset-x-3 top-16 z-50 mt-2 overflow-hidden p-2 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:w-64">
+                <div className="surface-card fixed inset-x-3 top-20 z-50 mt-2 overflow-hidden p-2 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-1 sm:w-64">
                   <div className="border-b border-[#D8EAE2] px-3 py-3">
                     <p className="truncate text-sm font-extrabold text-[#123B38]">{usuario?.nombre}</p>
                     <p className="truncate text-xs text-[#52716B]">{usuario?.correo}</p>

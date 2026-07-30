@@ -60,12 +60,12 @@ const FormField = ({
         required={required}
         aria-label={label}
         aria-invalid={Boolean(error)}
-        className={`h-12 w-full rounded-2xl border bg-[#F4FAF7] pr-4 text-sm text-[#123B38] outline-none transition focus:ring-4 ${
+        className={`w-full rounded-2xl border bg-[#F4FAF7] text-sm text-[#123B38] outline-none transition focus:ring-4 ${
           error
             ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100'
             : 'border-[#D8EAE2] focus:border-[#358F80] focus:ring-[#99E2B4]/25'
         } ${
-          Icon ? 'pl-11' : 'pl-4'
+          Icon ? 'pl-11 pr-4 py-2.5' : 'px-4 py-2.5'
         }`}
       />
     </div>
@@ -192,7 +192,7 @@ export const LoginPages = () => {
       <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-[#99E2B4]/45 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-48 -right-32 h-[32rem] w-[32rem] rounded-full bg-[#56AB91]/30 blur-3xl" />
 
-      <div className="relative mx-auto grid w-full max-w-4xl overflow-hidden rounded-[2rem] border border-[#D8EAE2] bg-white shadow-[0_30px_80px_rgba(3,102,102,0.12)] lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="relative mx-auto grid w-full max-w-4xl overflow-hidden rounded-[2rem] border border-[#D8EAE2] bg-white shadow-[0_30px_80px_rgba(3,102,102,0.12)] lg:grid-cols-[0.95fr_1.05fr] max-lg:rounded-none max-lg:border-0 max-lg:shadow-none">
         <section className="relative hidden overflow-hidden bg-[#036666] p-8 text-white lg:flex lg:flex-col">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(153,226,180,0.28),transparent_38%)]" />
           <div className="relative flex items-center gap-3">

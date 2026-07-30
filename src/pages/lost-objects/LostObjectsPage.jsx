@@ -137,8 +137,8 @@ export const LostObjectsPages = () => {
         </div>
 
         {/* Inputs & Category Filters */}
-        <div className="p-4 rounded-[28px] bg-white border border-[#D8EAE2] shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-          <div className="md:col-span-8 relative">
+        <div className="p-4 rounded-[28px] bg-white border border-[#D8EAE2] shadow-xs space-y-3">
+          <div className="relative">
             <HiMagnifyingGlass className="w-4 h-4 text-[#52716B] absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -149,7 +149,7 @@ export const LostObjectsPages = () => {
             />
           </div>
 
-          <div className="md:col-span-4 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <HiFunnel className="w-4 h-4 text-[#52716B] shrink-0" />
             <select
               value={selectedCategoria}
