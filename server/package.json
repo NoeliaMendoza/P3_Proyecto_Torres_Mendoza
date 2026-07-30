@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js",
+    "dev": "node index.js",
+    "dev:watch": "nodemon --delay 1000ms --watch routes --watch services --watch validators --watch config --watch database --watch index.js index.js",
     "smtp:check": "node scripts/check-smtp.js",
     "vapid:generate": "node scripts/configure-vapid.js"
   },

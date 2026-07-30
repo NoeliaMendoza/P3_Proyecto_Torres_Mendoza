@@ -19,7 +19,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icons/*.png', 'push-handler.js'],
-      devOptions: { enabled: true, type: 'module' },
+      // En desarrollo se desactiva para evitar que un SW antiguo intercepte
+      // módulos HMR o conserve formularios/API desactualizados.
+      devOptions: { enabled: false },
       workbox: {
         navigateFallback: '/index.html',
         importScripts: ['/push-handler.js'],

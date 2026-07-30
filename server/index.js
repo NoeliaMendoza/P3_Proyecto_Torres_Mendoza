@@ -19,7 +19,8 @@ app.use(cors());
 app.get('/health', async (_req, res) => {
   try {
     await conexion.query('SELECT 1');
-    res.json({ status: 'ok' });
+    const email = require('./services/email.service').getEmailStatus();
+    res.json({ status: 'ok', email });
   } catch (_error) {
     res.status(503).json({ status: 'database-unavailable' });
   }
@@ -37,12 +38,32 @@ app.use('/notificaciones', require('./routes/notificaciones.routes'));
 app.use('/matriculas', require('./routes/matriculas.routes'));
 
 
+let httpServer;
+
 const start = async () => {
   try {
     await require('./database/migrate')();
     await require('./database/seed-demo-users')();
-    app.listen(PUERTO, () => {
+    httpServer = app.listen(PUERTO, (listenError) => {
+      if (listenError) {
+        console.error(`No se pudo iniciar el servidor en el puerto ${PUERTO}:`, {
+          code: listenError.code,
+          message: listenError.message,
+        });
+        process.exitCode = 1;
+        return;
+      }
+
       console.log(`Servidor ESPEConnect ejecutándose en el puerto: ${PUERTO}`);
+      require('./services/email.service')
+        .verifyEmailTransport()
+        .catch((error) => {
+          console.error('[email] SMTP no disponible:', {
+            code: error.code,
+            responseCode: error.responseCode,
+            message: error.message,
+          });
+        });
     });
   } catch (error) {
     console.error('No se pudo preparar la base de datos:', error);
@@ -51,3 +72,5 @@ const start = async () => {
 };
 
 start();
+
+module.exports = { app, start, getHttpServer: () => httpServer };
