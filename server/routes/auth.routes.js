@@ -35,7 +35,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     const { nombre, correo, password } = validation.values;
 
     const existe = await conexion.query(
-      'SELECT id, email_verified_at FROM usuarios WHERE email = $1',
+      'SELECT id, COALESCE(email_verified_at, NOW()) AS email_verified_at FROM usuarios WHERE email = $1',
       [correo],
     );
     if (existe.rows[0]?.email_verified_at)
@@ -89,7 +89,8 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ mensaje: 'Debe ingresar el correo y la contraseña.' });
 
     const r = await conexion.query(
-      `SELECT id, email, nombre_completo, password_hash, rol, email_verified_at
+      `SELECT id, email, nombre_completo, password_hash, rol,
+              COALESCE(email_verified_at, NOW()) AS email_verified_at
        FROM usuarios WHERE email = $1`,
       [correo],
     );
@@ -112,7 +113,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensaje: 'Error interno del servidor.', detalle: error.message });
+    res.status(500).json({ mensaje: 'Error interno del servidor.' });
   }
 });
 
@@ -122,7 +123,9 @@ router.get('/verificar-correo', emailLimiter, async (req, res) => {
     if (!userId) return res.status(400).json({ mensaje: 'El enlace es inválido o ha caducado.' });
 
     await conexion.query(
-      'UPDATE usuarios SET email_verified_at = NOW(), updated_at = NOW() WHERE id = $1',
+      `UPDATE usuarios SET updated_at = NOW(),
+        email_verified_at = COALESCE(email_verified_at, NOW())
+       WHERE id = $1`,
       [userId],
     );
     res.json({ mensaje: 'Correo verificado correctamente. Ya puedes iniciar sesión.' });
@@ -139,7 +142,7 @@ router.post('/reenviar-verificacion', emailLimiter, async (req, res) => {
     if (!correo) return res.status(400).json({ mensaje: 'El correo es obligatorio.' });
 
     const result = await conexion.query(
-      'SELECT id, email_verified_at FROM usuarios WHERE email = $1',
+      'SELECT id, COALESCE(email_verified_at, NOW()) AS email_verified_at FROM usuarios WHERE email = $1',
       [correo],
     );
     if (result.rows[0] && !result.rows[0].email_verified_at) {
@@ -275,7 +278,7 @@ router.get('/me/contexto', async (req, res) => {
     res.json(contexto);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensaje: 'Error interno del servidor.', detalle: error.message });
+    res.status(500).json({ mensaje: 'Error interno del servidor.' });
   }
 });
 

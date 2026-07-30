@@ -62,16 +62,8 @@ const migrate = async () => {
   await repairBaseConstraints();
 
   await conexion.query(`
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'usuarios' AND column_name = 'email_verified_at'
-      ) THEN
-        ALTER TABLE usuarios ADD COLUMN email_verified_at TIMESTAMP;
-        UPDATE usuarios SET email_verified_at = COALESCE(created_at, NOW());
-      END IF;
-    END $$;
+    ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP;
+    UPDATE usuarios SET email_verified_at = COALESCE(email_verified_at, created_at, NOW());
     CREATE TABLE IF NOT EXISTS auth_tokens (
       id BIGSERIAL PRIMARY KEY,
       user_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
