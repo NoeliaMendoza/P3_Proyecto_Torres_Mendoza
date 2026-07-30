@@ -11,11 +11,13 @@ import {
   HiChatBubbleLeftEllipsis
 } from 'react-icons/hi2';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authStore';
 import { marcarComoEncontrado, reclamarObjeto } from '../../services/objetos.services';
 
 export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
   if (!isOpen || !objeto) return null;
+  const queryClient = useQueryClient();
 
   const isEncontrado = objeto.tipo === 'encontrado';
   const usuario = useAuthStore((s) => s.usuario);
@@ -26,6 +28,7 @@ export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
     try {
       await marcarComoEncontrado(objeto.id);
       toast.success('Objeto marcado como encontrado');
+      queryClient.invalidateQueries({ queryKey: ['objetos'] });
       onClose();
     } catch (error) {
       toast.error(error.response?.data?.mensaje || 'No se pudo marcar como encontrado');
@@ -37,6 +40,7 @@ export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
       try {
         await reclamarObjeto(objeto.id);
         toast.success('Objeto reclamado correctamente');
+        queryClient.invalidateQueries({ queryKey: ['objetos'] });
         onClose();
       } catch (error) {
         toast.error(error.response?.data?.mensaje || 'No se pudo reclamar el objeto');
