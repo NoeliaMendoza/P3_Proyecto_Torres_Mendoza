@@ -35,10 +35,10 @@ router.post('/register', registerLimiter, async (req, res) => {
     const { nombre, correo, password } = validation.values;
 
     const existe = await conexion.query(
-      'SELECT id, COALESCE(email_verified_at, NOW()) AS email_verified_at FROM usuarios WHERE email = $1',
+      'SELECT id, email_verified_at FROM usuarios WHERE email = $1',
       [correo],
     );
-    if (existe.rows[0]?.email_verified_at)
+    if (existe.rows[0] && existe.rows[0].email_verified_at)
       return res.status(409).json({
         mensaje: 'El correo ya se encuentra registrado.',
         errores: { correo: 'Ya existe una cuenta con este correo institucional.' },
@@ -90,7 +90,7 @@ router.post('/login', async (req, res) => {
 
     const r = await conexion.query(
       `SELECT id, email, nombre_completo, password_hash, rol,
-              COALESCE(email_verified_at, NOW()) AS email_verified_at
+              email_verified_at
        FROM usuarios WHERE email = $1`,
       [correo],
     );
