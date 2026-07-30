@@ -105,6 +105,28 @@ ALTER TABLE objetos_perdidos ADD CONSTRAINT objetos_perdidos_id_reclamante_fkey
   FOREIGN KEY (id_reclamante) REFERENCES usuarios(id) ON DELETE SET NULL;
 
 -- 4e. reservas_espacios → periodos, nrc
+-- Normalizar referencias históricas huérfanas antes de validar las FKs.
+UPDATE reservas_espacios r
+SET id_periodo = NULL
+WHERE id_periodo IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM periodos_academicos p WHERE p.id = r.id_periodo
+  );
+
+UPDATE reservas_espacios r
+SET id_nrc = NULL
+WHERE id_nrc IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM nrc n WHERE n.id = r.id_nrc
+  );
+
+UPDATE reservas_espacios r
+SET aprobado_por = NULL
+WHERE aprobado_por IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM usuarios u WHERE u.id = r.aprobado_por
+  );
+
 ALTER TABLE reservas_espacios DROP CONSTRAINT IF EXISTS reservas_espacios_id_periodo_fkey;
 ALTER TABLE reservas_espacios ADD CONSTRAINT reservas_espacios_id_periodo_fkey
   FOREIGN KEY (id_periodo) REFERENCES periodos_academicos(id) ON DELETE SET NULL;
