@@ -25,9 +25,9 @@ fuera del contexto autorizado.`;
 router.get('/status', authentication, async (_req, res) => {
   try {
     const available = await ollama.checkModel();
-    res.json({ available, model: ollama.model, local: true });
+    res.json({ available, model: ollama.model, local: ollama.local });
   } catch (_error) {
-    res.status(503).json({ available: false, model: ollama.model, local: true });
+    res.status(503).json({ available: false, model: ollama.model, local: ollama.local });
   }
 });
 
@@ -58,11 +58,11 @@ router.post('/chat', authentication, aiLimiter, async (req, res) => {
       ],
     });
     if (!answer) throw new Error('Ollama no devolvió contenido.');
-    res.json({ answer, model: ollama.model, local: true });
+    res.json({ answer, model: ollama.model, local: ollama.local });
   } catch (error) {
     console.error('Error del asistente local:', error.message);
     res.status(503).json({
-      mensaje: 'El asistente local no está disponible. Verifica que Ollama esté iniciado.',
+      mensaje: 'El asistente IA no está disponible. Verifica la configuración del proveedor.',
     });
   }
 });
