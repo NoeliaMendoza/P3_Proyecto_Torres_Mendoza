@@ -6,12 +6,20 @@ export const login = async (correo, password) => {
 };
 
 export const registerUser = async (nombre, correo, password) => {
-  const response = await api.post('/auth/register', { nombre, correo, password });
+  const response = await api.post(
+    '/auth/register',
+    { nombre, correo, password },
+    { timeout: 60000 },
+  );
   return response.data;
 };
 
 export const recperarPasswordService = async (correo) => {
-  const response = await api.post('/auth/recuperar-password', { correo });
+  const response = await api.post(
+    '/auth/recuperar-password',
+    { correo },
+    { timeout: 60000 },
+  );
   return response.data;
 };
 
@@ -21,7 +29,11 @@ export const verificarCorreo = async (token) => {
 };
 
 export const reenviarVerificacion = async (correo) => {
-  const response = await api.post('/auth/reenviar-verificacion', { correo });
+  const response = await api.post(
+    '/auth/reenviar-verificacion',
+    { correo },
+    { timeout: 60000 },
+  );
   return response.data;
 };
 
