@@ -90,7 +90,7 @@ export const AIAssistant = () => {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Abrir asistente de inteligencia artificial"
-        className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-2xl bg-[#036666] text-[#99E2B4] shadow-[0_16px_40px_rgba(3,102,102,0.3)] transition hover:scale-105 hover:bg-[#14746F]"
+        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-3 z-40 grid h-12 w-12 place-items-center rounded-2xl bg-[#036666] text-[#99E2B4] shadow-[0_16px_40px_rgba(3,102,102,0.3)] transition hover:scale-105 hover:bg-[#14746F] sm:bottom-5 sm:right-5 sm:h-14 sm:w-14"
       >
         <HiChatBubbleLeftEllipsis className="h-6 w-6" />
       </button>
@@ -111,7 +111,7 @@ export const AIAssistant = () => {
               initial={{ opacity: 0, y: 24, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              className="fixed inset-x-3 bottom-3 z-50 flex h-[min(680px,calc(100vh-24px))] flex-col overflow-hidden rounded-[28px] border border-[#D8EAE2] bg-white shadow-2xl sm:left-auto sm:right-5 sm:w-[410px]"
+              className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-50 flex h-[min(680px,calc(100dvh-1rem))] flex-col overflow-hidden rounded-[24px] border border-[#D8EAE2] bg-white shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[410px] sm:rounded-[28px]"
             >
               <header className="flex items-center gap-3 bg-[#036666] p-4 text-white">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#99E2B4] text-[#036666]">

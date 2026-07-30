@@ -45,8 +45,8 @@ export const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[#D8EAE2] bg-white/88 px-4 py-3 backdrop-blur-xl md:px-8">
-      <div className="mx-auto flex max-w-7xl items-center gap-2 sm:gap-4">
+    <header className="sticky top-0 z-30 border-b border-[#D8EAE2] bg-white/88 px-3 py-2.5 backdrop-blur-xl sm:px-4 sm:py-3 md:px-8">
+      <div className="mx-auto flex max-w-7xl items-center gap-1.5 sm:gap-4">
         <Button
           isIconOnly
           variant="light"
@@ -81,18 +81,18 @@ export const Header = () => {
           type="button"
           onClick={() => navigate('/espacios')}
           aria-label="Buscar"
-          className="flex h-10 w-10 min-w-10 items-center justify-center rounded-xl bg-[#EAF6F0] text-[#036666] md:hidden"
+          className="hidden h-10 w-10 min-w-10 items-center justify-center rounded-xl bg-[#EAF6F0] text-[#036666] sm:flex md:hidden"
         >
           <HiMagnifyingGlass className="h-5 w-5" />
         </button>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <Button
             isIconOnly
             variant="flat"
             onPress={toggleNotificationDrawer}
             aria-label="Ver notificaciones"
-            className="relative rounded-2xl bg-[#EAF6F0] text-[#036666]"
+            className="relative h-10 w-10 min-w-10 rounded-xl bg-[#EAF6F0] text-[#036666] sm:h-11 sm:w-11 sm:rounded-2xl"
           >
             <HiBell className="h-5 w-5" />
             {unreadCount > 0 && (
