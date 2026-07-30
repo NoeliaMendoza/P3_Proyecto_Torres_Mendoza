@@ -7,6 +7,10 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
+app.use('/api/debug', (req, res) => {
+  res.json({ url: req.url, originalUrl: req.originalUrl, path: req.path, baseUrl: req.baseUrl, method: req.method });
+});
+
 app.get('/api/health', async (_req, res) => {
   try {
     const { Pool } = require('pg');
