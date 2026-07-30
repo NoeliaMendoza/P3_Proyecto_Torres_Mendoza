@@ -16,11 +16,11 @@ import { useAuthStore } from '../../store/authStore';
 import { marcarComoEncontrado, reclamarObjeto } from '../../services/objetos.services';
 
 export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
-  if (!isOpen || !objeto) return null;
   const queryClient = useQueryClient();
+  const usuario = useAuthStore((s) => s.usuario);
+  if (!isOpen || !objeto) return null;
 
   const isEncontrado = objeto.tipo === 'encontrado';
-  const usuario = useAuthStore((s) => s.usuario);
   const esMiPublicacion = usuario?.id === objeto.id_reportante;
   const puedeMarcarEncontrado = esMiPublicacion && objeto.estado === 'abierto';
 
