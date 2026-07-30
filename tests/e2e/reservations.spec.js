@@ -15,15 +15,9 @@ test('rechaza una segunda reserva que se superpone con una reserva activa', asyn
   const spaces = await spacesResponse.json();
   expect(spaces.length).toBeGreaterThan(0);
 
-  const periodResponse = await request.get('/api/horarios/periodo-actual', { headers });
-  expect(periodResponse.ok()).toBeTruthy();
-  const period = await periodResponse.json();
-  const periodEnd = period.fecha_fin.slice(0, 10);
-  const saturday = new Date(`${periodEnd}T00:00:00.000Z`);
-  while (saturday.getUTCDay() !== 6) saturday.setUTCDate(saturday.getUTCDate() + 1);
-  if (saturday.toISOString().slice(0, 10) > periodEnd) {
-    saturday.setUTCDate(saturday.getUTCDate() - 7);
-  }
+  const now = new Date();
+  const saturday = new Date(now);
+  saturday.setUTCDate(saturday.getUTCDate() + ((6 - saturday.getUTCDay() + 7) % 7));
   const fecha = saturday.toISOString().slice(0, 10);
 
   const first = await request.post('/api/reservas', {

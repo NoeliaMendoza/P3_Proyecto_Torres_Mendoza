@@ -214,7 +214,7 @@ export const LoginPages = () => {
   };
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F4FAF7] p-4 md:p-8">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F4FAF7] p-2 sm:p-4 md:p-8">
       <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-[#99E2B4]/45 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-48 -right-32 h-[32rem] w-[32rem] rounded-full bg-[#56AB91]/30 blur-3xl" />
 
@@ -259,7 +259,7 @@ export const LoginPages = () => {
           <p className="relative text-xs text-[#C8E8D7]">Seguro · Accesible · Disponible sin conexión</p>
         </section>
 
-        <section className="flex items-center justify-center p-6 sm:p-8 lg:p-10">
+        <section className="flex items-center justify-center px-4 py-6 sm:p-8 lg:p-10">
           <div className="w-full max-w-md">
             <div className="mb-8 lg:hidden">
               <div className="mb-3 grid h-11 w-11 place-items-center rounded-2xl bg-[#036666] text-[#99E2B4]">
@@ -360,7 +360,7 @@ export const LoginPages = () => {
                       </AuthCheckbox>
                     </>
                   ) : (
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <AuthCheckbox
                         name="rememberMe"
                         checked={recordarme}
@@ -425,7 +425,7 @@ export const LoginPages = () => {
 
             {mode === 'login' && <div className="mt-4">
               <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-wider text-[#6A8881]">Acceso rápido</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-2">
                 <Button
                   variant="flat"
                   onPress={() => useDemo('student')}
