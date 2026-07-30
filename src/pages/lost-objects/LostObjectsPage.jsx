@@ -1,10 +1,8 @@
 ﻿import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { 
   HiMagnifyingGlass, 
   HiPlus, 
-  HiTag, 
   HiFunnel, 
   HiCheckBadge, 
   HiExclamationTriangle,
@@ -16,10 +14,10 @@ import { LostFoundCard } from '../../components/lostFound/LostFoundCard';
 import { PublishObjectModal } from '../../components/lostFound/PublishObjectModal';
 import { ObjectDetailModal } from '../../components/lostFound/ObjectDetailModal';
 
-const mapearObjeto = (api) => ({
+const mapearObjeto = (api) => api.nombre ? api : ({
   id: api.id,
-  nombre: api.titulo,
-  descripcion: api.descripcion,
+  nombre: api.titulo || 'Objeto sin nombre',
+  descripcion: api.descripcion || '',
   tipo: api.tipo,
   lugar: api.ubicacion || 'No especificada',
   fecha: api.fecha_evento ? String(api.fecha_evento).slice(0, 10) : 'Sin fecha',
@@ -35,10 +33,16 @@ const mapearObjeto = (api) => ({
 export const LostObjectsPages = () => {
   const { objetos, setObjetos } = useUIStore();
 
-  const { data: objetosAPI } = useQuery({
+  const {
+    data: objetosAPI,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['objetos'],
     queryFn: obtenerObjetos,
     staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
@@ -56,9 +60,9 @@ export const LostObjectsPages = () => {
   const filteredObjetos = useMemo(() => {
     return objetos.filter((o) => {
       const matchSearch =
-        o.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.lugar.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
+        (o.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (o.lugar || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (o.descripcion || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchTab =
         activeTab === 'todos' ||
@@ -168,7 +172,22 @@ export const LostObjectsPages = () => {
       </div>
 
       {/* Grid Display */}
-      {filteredObjetos.length === 0 ? (
+      {isLoading && objetos.length === 0 ? (
+        <div className="py-16 text-center bg-white rounded-[32px] border border-[#D8EAE2] p-8">
+          <p className="text-sm font-bold text-[#52716B]">Cargando publicaciones...</p>
+        </div>
+      ) : isError && objetos.length === 0 ? (
+        <div className="py-16 text-center bg-white rounded-[32px] border border-rose-200 p-8 space-y-3">
+          <h3 className="text-base font-extrabold text-[#123B38]">No se pudieron cargar los objetos</h3>
+          <p className="text-xs text-[#52716B]">Comprueba que el backend esté activo e inténtalo nuevamente.</p>
+          <button
+            onClick={() => refetch()}
+            className="px-5 py-2.5 rounded-full text-xs font-extrabold bg-[#358F80] text-white"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : filteredObjetos.length === 0 ? (
         <div className="py-16 text-center bg-white rounded-[32px] border border-[#D8EAE2] p-8 space-y-3">
           <HiInboxStack className="w-12 h-12 text-[#6A8881] mx-auto" />
           <h3 className="text-base font-extrabold text-[#123B38]">No hay publicaciones registradas</h3>

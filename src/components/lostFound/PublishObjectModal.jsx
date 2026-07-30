@@ -7,19 +7,22 @@ import {
   HiTag, 
   HiMapPin, 
   HiCalendar, 
-  HiCheckCircle,
   HiArrowUpTray,
   HiLink
 } from 'react-icons/hi2';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { crearObjeto } from '../../services/objetos.services';
 import { useAuthStore } from '../../store/authStore';
 
 export const PublishObjectModal = ({ isOpen, onClose }) => {
+  const queryClient = useQueryClient();
   const usuario = useAuthStore((s) => s.usuario);
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [imageMode, setImageMode] = useState('upload');
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
     defaultValues: {
@@ -32,11 +35,6 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
       reportante_contacto: usuario?.correo || 'estudiante@espe.edu.ec'
     }
   });
-
-  if (!isOpen) return null;
-
-  const [imageMode, setImageMode] = useState('upload');
-  const [isDragOver, setIsDragOver] = useState(false);
 
   const processFile = (file) => {
     if (!file) return;
@@ -100,12 +98,15 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
       setImageUrl('');
       if (fileInputRef.current) fileInputRef.current.value = '';
       onClose();
+      await queryClient.invalidateQueries({ queryKey: ['objetos'] });
     } catch (err) {
       toast.error('Error al publicar el objeto', {
-        description: 'Verifique los campos e intente nuevamente.'
+        description: err.response?.data?.mensaje || 'Verifique los campos e intente nuevamente.'
       });
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>

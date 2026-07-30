@@ -19,7 +19,10 @@ router.get('/', authentication, async (req, res) => {
     if (search) { query += ` AND (o.titulo ILIKE $${i} OR o.descripcion ILIKE $${i})`; params.push(`%${search}%`); i++; }
     query += ' ORDER BY o.created_at DESC';
     res.json((await conexion.query(query, params)).rows);
-  } catch (error) { res.status(500).json({ mensaje: 'Error interno del servidor.' }); }
+  } catch (error) {
+    console.error('[objetos:listar]', error);
+    res.status(500).json({ mensaje: 'No se pudieron consultar los objetos.' });
+  }
 });
 
 router.get('/categorias', authentication, async (req, res) => {
@@ -32,13 +35,28 @@ router.post('/', authentication, async (req, res) => {
     const { titulo, descripcion, id_categoria, tipo, ubicacion, fecha_evento, informacion_contacto, imagen } = req.body;
     if (!titulo || !descripcion || !tipo)
       return res.status(400).json({ mensaje: 'Título, descripción y tipo son requeridos.' });
+    let categoriaId = id_categoria || null;
+    if (req.body.categoria) {
+      const categoriaResult = await conexion.query(
+        'SELECT id FROM categorias_objetos WHERE nombre = $1 LIMIT 1',
+        [req.body.categoria],
+      );
+      categoriaId = categoriaResult.rows[0]?.id || null;
+    }
+    if (!categoriaId) {
+      return res.status(400).json({ mensaje: 'Selecciona una categoría válida.' });
+    }
+
     const r = await conexion.query(
       `INSERT INTO objetos_perdidos (titulo, descripcion, id_categoria, tipo, ubicacion, fecha_evento, id_reportante, informacion_contacto, imagenes_url)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [titulo, descripcion, id_categoria||null, tipo, ubicacion||null, fecha_evento||null, req.usuario.id, informacion_contacto||null, imagen ? [imagen] : null]
+      [titulo, descripcion, categoriaId, tipo, ubicacion||null, fecha_evento||null, req.usuario.id, informacion_contacto||null, imagen ? [imagen] : null]
     );
     res.status(201).json({ mensaje: 'Reporte creado correctamente.', objeto: r.rows[0] });
-  } catch (error) { res.status(500).json({ mensaje: 'Error interno del servidor.' }); }
+  } catch (error) {
+    console.error('[objetos:crear]', error);
+    res.status(500).json({ mensaje: 'No se pudo publicar el objeto.' });
+  }
 });
 
 router.put('/:id', authentication, async (req, res) => {

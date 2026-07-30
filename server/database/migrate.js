@@ -13,6 +13,21 @@ const ensureConstraint = async (table, name, definition) => {
   }
 };
 
+const ensureSerialDefault = async (table) => {
+  const sequence = `${table}_id_seq`;
+  await conexion.query(`
+    CREATE SEQUENCE IF NOT EXISTS ${sequence};
+    ALTER SEQUENCE ${sequence} OWNED BY ${table}.id;
+    ALTER TABLE ${table}
+      ALTER COLUMN id SET DEFAULT nextval('${sequence}');
+    SELECT setval(
+      '${sequence}',
+      GREATEST(COALESCE((SELECT MAX(id) FROM ${table}), 0) + 1, 1),
+      false
+    );
+  `);
+};
+
 const repairBaseConstraints = async () => {
   const constraints = [
     ['periodos_academicos', 'periodos_academicos_pkey', 'PRIMARY KEY (id)'],
@@ -31,12 +46,16 @@ const repairBaseConstraints = async () => {
     ['horarios', 'horarios_pkey', 'PRIMARY KEY (id)'],
     ['disponibilidad_espacios', 'disponibilidad_espacios_pkey', 'PRIMARY KEY (id)'],
     ['categorias_objetos', 'categorias_objetos_pkey', 'PRIMARY KEY (id)'],
+    ['categorias_objetos', 'categorias_objetos_nombre_key', 'UNIQUE (nombre)'],
     ['objetos_perdidos', 'objetos_perdidos_pkey', 'PRIMARY KEY (id)'],
   ];
 
   for (const [table, name, definition] of constraints) {
     await ensureConstraint(table, name, definition);
   }
+
+  await ensureSerialDefault('categorias_objetos');
+  await ensureSerialDefault('objetos_perdidos');
 };
 
 const migrate = async () => {
