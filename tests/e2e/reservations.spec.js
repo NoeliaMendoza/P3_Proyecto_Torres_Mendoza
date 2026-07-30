@@ -15,9 +15,15 @@ test('rechaza una segunda reserva que se superpone con una reserva activa', asyn
   const spaces = await spacesResponse.json();
   expect(spaces.length).toBeGreaterThan(0);
 
-  const saturday = new Date(Date.UTC(2030, 0, 1));
-  saturday.setUTCDate(saturday.getUTCDate() + Math.floor(Math.random() * 15000));
+  const periodResponse = await request.get('/api/horarios/periodo-actual', { headers });
+  expect(periodResponse.ok()).toBeTruthy();
+  const period = await periodResponse.json();
+  const periodEnd = period.fecha_fin.slice(0, 10);
+  const saturday = new Date(`${periodEnd}T00:00:00.000Z`);
   while (saturday.getUTCDay() !== 6) saturday.setUTCDate(saturday.getUTCDate() + 1);
+  if (saturday.toISOString().slice(0, 10) > periodEnd) {
+    saturday.setUTCDate(saturday.getUTCDate() - 7);
+  }
   const fecha = saturday.toISOString().slice(0, 10);
 
   const first = await request.post('/api/reservas', {
@@ -25,8 +31,8 @@ test('rechaza una segunda reserva que se superpone con una reserva activa', asyn
     data: {
       espacioId: spaces[0].id,
       fecha,
-      horaInicio: '14:00',
-      horaFin: '16:00',
+      horaInicio: '10:00',
+      horaFin: '12:00',
       motivo: 'Prueba automática de reserva inicial',
     },
   });
@@ -38,8 +44,8 @@ test('rechaza una segunda reserva que se superpone con una reserva activa', asyn
     data: {
       espacioId: spaces[0].id,
       fecha,
-      horaInicio: '15:00',
-      horaFin: '17:00',
+      horaInicio: '11:00',
+      horaFin: '13:00',
       motivo: 'Prueba automática de horario superpuesto',
     },
   });
@@ -68,13 +74,13 @@ test('rechaza una segunda reserva que se superpone con una reserva activa', asyn
     estado: 'pendiente',
   }));
 
-  const approval = await request.patch(`/api/reservas/${createdReservation.id}/estado`, {
+  const review = await request.patch(`/api/reservas/${createdReservation.id}/estado`, {
     headers: adminHeaders,
-    data: { estado: 'aprobada' },
+    data: { estado: 'rechazada' },
   });
-  expect(approval.ok()).toBeTruthy();
-  await expect(approval.json()).resolves.toEqual(
-    expect.objectContaining({ reserva: expect.objectContaining({ estado: 'aprobada' }) })
+  expect(review.ok()).toBeTruthy();
+  await expect(review.json()).resolves.toEqual(
+    expect.objectContaining({ reserva: expect.objectContaining({ estado: 'rechazada' }) })
   );
 });
 

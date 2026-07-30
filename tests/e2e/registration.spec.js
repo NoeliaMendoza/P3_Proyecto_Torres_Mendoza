@@ -41,10 +41,9 @@ test('el backend normaliza el correo y exige verificación antes de iniciar sesi
 
 test('el docente visualiza su horario y puede colocar una materia disponible', async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel('Correo institucional').fill('kjchuquitarko@espe.edu.ec');
-  await page.getByLabel('ContraseÃ±a').fill('docente2026');
+  await page.getByRole('button', { name: 'Docente', exact: true }).click();
   await page.getByRole('button', { name: /acceder al sistema/i }).click();
-
+  await expect(page).toHaveURL(/\/dashboard$/);
   await page.goto('/horarios');
   await expect(page.getByRole('heading', { name: /mi horario docente/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /colocar materia/i })).toBeVisible();

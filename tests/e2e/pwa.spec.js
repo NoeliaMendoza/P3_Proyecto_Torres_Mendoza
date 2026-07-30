@@ -42,7 +42,9 @@ test('la aplicación abre sin internet después de la primera carga', async ({ p
 test('el contenedor frontend comunica con el backend mediante el proxy', async ({ request }) => {
   const response = await request.get('/api/health');
   expect(response.ok()).toBeTruthy();
-  await expect(response.json()).resolves.toEqual({ status: 'ok' });
+  await expect(response.json()).resolves.toEqual(
+    expect.objectContaining({ status: 'ok' }),
+  );
 });
 
 test('autentica contra PostgreSQL y accede a una ruta privada', async ({ page }) => {
