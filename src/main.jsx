@@ -11,18 +11,30 @@ window.addEventListener('beforeinstallprompt', (e) => {
   window.__espeDeferredPrompt = e;
 });
 
-const updateSW = registerSW({
-  immediate: true,
-  onNeedRefresh() {
-    window.__espePwaUpdateAvailable = true;
-    window.dispatchEvent(new CustomEvent('espe:pwa-update'));
-  },
-  onOfflineReady() {
-    window.dispatchEvent(new CustomEvent('espe:pwa-offline-ready'));
+if (import.meta.env.PROD) {
+  const updateSW = registerSW({
+    immediate: true,
+    onNeedRefresh() {
+      window.__espePwaUpdateAvailable = true;
+      window.dispatchEvent(new CustomEvent('espe:pwa-update'));
+    },
+    onOfflineReady() {
+      window.dispatchEvent(new CustomEvent('espe:pwa-offline-ready'));
+    }
+  });
+  window.__espePwaUpdate = () => updateSW(true);
+} else if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => registration.unregister());
+  });
+  if ('caches' in window) {
+    caches.keys().then((keys) => {
+      keys
+        .filter((key) => key.startsWith('workbox-') || key.startsWith('espe-'))
+        .forEach((key) => caches.delete(key));
+    });
   }
-})
-
-window.__espePwaUpdate = () => updateSW(true);
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
