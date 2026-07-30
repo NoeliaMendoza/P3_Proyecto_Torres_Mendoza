@@ -22,14 +22,25 @@ const registerPendingUser = async ({ nombre, correo, password }) => {
     const user = existing.rows.length
       ? await client.query(
         `UPDATE usuarios
-         SET password_hash = $1, nombre_completo = $2, updated_at = NOW()
+         SET password_hash = $1,
+             nombre_completo = $2,
+             id_periodo_activo = COALESCE(
+               id_periodo_activo,
+               (SELECT id FROM periodos_academicos WHERE activo = true LIMIT 1)
+             ),
+             updated_at = NOW()
          WHERE id = $3
          RETURNING id`,
         [passwordHash, nombre, existing.rows[0].id],
       )
       : await client.query(
-        `INSERT INTO usuarios (email, password_hash, nombre_completo, rol)
-         VALUES ($1, $2, $3, 'estudiante')
+        `INSERT INTO usuarios (
+           email, password_hash, nombre_completo, rol, id_periodo_activo
+         )
+         VALUES (
+           $1, $2, $3, 'estudiante',
+           (SELECT id FROM periodos_academicos WHERE activo = true LIMIT 1)
+         )
          RETURNING id`,
         [correo, passwordHash, nombre],
       );
