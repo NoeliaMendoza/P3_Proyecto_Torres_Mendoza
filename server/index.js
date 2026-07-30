@@ -43,7 +43,6 @@ let httpServer;
 const start = async () => {
   try {
     await require('./database/migrate')();
-    await require('./database/seed-demo-users')();
     httpServer = app.listen(PUERTO, (listenError) => {
       if (listenError) {
         console.error(`No se pudo iniciar el servidor en el puerto ${PUERTO}:`, {
