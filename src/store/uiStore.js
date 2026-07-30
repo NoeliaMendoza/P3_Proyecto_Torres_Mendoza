@@ -1,10 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+const getInitialSidebar = () => {
+  if (typeof window === 'undefined') return true;
+  return window.innerWidth >= 768;
+};
+
 export const useUIStore = create(
   persist(
     (set, _get) => ({
-      sidebarOpen: true,
+      sidebarOpen: getInitialSidebar(),
       notificationDrawerOpen: false,
       notificaciones: [],
       espacios: [],
