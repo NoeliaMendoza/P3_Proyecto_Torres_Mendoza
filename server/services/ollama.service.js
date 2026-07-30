@@ -38,7 +38,7 @@ const ollamaChat = async ({ messages, system }) => {
 
 // ─── Modo Cloud (OpenAI / Groq / Together) ────────────────────────
 const providers = {
-  openai: { baseURL: undefined, model: 'gpt-4o-mini' },
+  openai: { baseURL: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
   groq: { baseURL: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile' },
   together: { baseURL: 'https://api.together.xyz/v1', model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo' },
 };
@@ -46,28 +46,37 @@ const providers = {
 const config = providers[AI_PROVIDER] || providers.openai;
 const cloudModel = process.env.AI_MODEL || config.model;
 const isCloud = AI_PROVIDER !== 'ollama' && AI_API_KEY.length > 0;
+const cloudBaseURL = process.env.AI_BASE_URL || config.baseURL;
 
-let _client = null;
-const getClient = () => {
-  if (!_client) {
-    const OpenAI = require('openai');
-    _client = new OpenAI({ apiKey: AI_API_KEY, baseURL: process.env.AI_BASE_URL || config.baseURL });
+const cloudRequest = async (path, body) => {
+  const response = await fetch(`${cloudBaseURL}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${AI_API_KEY}`,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(90_000),
+  });
+  if (!response.ok) {
+    throw new Error(`API cloud respondió con estado ${response.status}.`);
   }
-  return _client;
+  return response.json();
 };
 
 const cloudCheck = async () => {
   try {
-    const models = await getClient().models.list();
-    return models.data?.length > 0;
+    const data = await cloudRequest('/models', {});
+    return Array.isArray(data.data) && data.data.length > 0;
   } catch {
     return false;
   }
 };
 
 const cloudChat = async ({ messages, system }) => {
-  const completion = await getClient().chat.completions.create({
+  const data = await cloudRequest('/chat/completions', {
     model: cloudModel,
+    stream: false,
     messages: [
       { role: 'system', content: system },
       ...messages.map((m) => ({ role: m.role, content: m.content })),
@@ -75,7 +84,7 @@ const cloudChat = async ({ messages, system }) => {
     temperature: 0.2,
     max_tokens: 300,
   });
-  return toPlainText(completion.choices[0]?.message?.content || '');
+  return toPlainText(data.choices?.[0]?.message?.content || '');
 };
 
 // ─── Utilitario compartido ─────────────────────────────────────────
