@@ -6,6 +6,7 @@
     "start": "node index.js",
     "dev": "node index.js",
     "dev:watch": "nodemon --delay 1000ms --watch routes --watch services --watch validators --watch config --watch database --watch index.js index.js",
+    "seed:demo": "node scripts/seed-demo-users.js",
     "smtp:check": "node scripts/check-smtp.js",
     "vapid:generate": "node scripts/configure-vapid.js"
   },
