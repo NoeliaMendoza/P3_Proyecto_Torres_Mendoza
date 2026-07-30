@@ -48,25 +48,19 @@ const cloudModel = process.env.AI_MODEL || config.model;
 const isCloud = AI_PROVIDER !== 'ollama' && AI_API_KEY.length > 0;
 const cloudBaseURL = process.env.AI_BASE_URL || config.baseURL;
 
-const cloudRequest = async (path, body) => {
-  const response = await fetch(`${cloudBaseURL}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${AI_API_KEY}`,
-    },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(90_000),
+const cloudFetch = async (url, options = {}) => {
+  const response = await fetch(url, {
+    ...options,
+    signal: AbortSignal.timeout(30_000),
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${AI_API_KEY}`, ...options.headers },
   });
-  if (!response.ok) {
-    throw new Error(`API cloud respondió con estado ${response.status}.`);
-  }
+  if (!response.ok) throw new Error(`API cloud respondió con estado ${response.status}.`);
   return response.json();
 };
 
 const cloudCheck = async () => {
   try {
-    const data = await cloudRequest('/models', {});
+    const data = await cloudFetch(`${cloudBaseURL}/models`);
     return Array.isArray(data.data) && data.data.length > 0;
   } catch {
     return false;
@@ -74,15 +68,18 @@ const cloudCheck = async () => {
 };
 
 const cloudChat = async ({ messages, system }) => {
-  const data = await cloudRequest('/chat/completions', {
-    model: cloudModel,
-    stream: false,
-    messages: [
-      { role: 'system', content: system },
-      ...messages.map((m) => ({ role: m.role, content: m.content })),
-    ],
-    temperature: 0.2,
-    max_tokens: 300,
+  const data = await cloudFetch(`${cloudBaseURL}/chat/completions`, {
+    method: 'POST',
+    body: JSON.stringify({
+      model: cloudModel,
+      stream: false,
+      messages: [
+        { role: 'system', content: system },
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+      ],
+      temperature: 0.2,
+      max_tokens: 300,
+    }),
   });
   return toPlainText(data.choices?.[0]?.message?.content || '');
 };
