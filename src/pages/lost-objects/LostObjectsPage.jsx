@@ -166,7 +166,7 @@ export const LostObjectsPages = () => {
               <option value="Documentos">Documentos</option>
               <option value="Mochilas y Bolsos">Mochilas y Bolsos</option>
               <option value="Accesorios">Accesorios</option>
-              <option value="Utiles">Útiles Académicos</option>
+              <option value="Útiles Académicos">Útiles Académicos</option>
             </select>
           </div>
         </div>

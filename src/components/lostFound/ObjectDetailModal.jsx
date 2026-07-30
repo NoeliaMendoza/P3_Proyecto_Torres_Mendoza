@@ -12,7 +12,7 @@ import {
 } from 'react-icons/hi2';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../store/authStore';
-import { marcarComoEncontrado } from '../../services/objetos.services';
+import { marcarComoEncontrado, reclamarObjeto } from '../../services/objetos.services';
 
 export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
   if (!isOpen || !objeto) return null;
@@ -32,11 +32,21 @@ export const ObjectDetailModal = ({ objeto, isOpen, onClose }) => {
     }
   };
 
-  const handleContact = () => {
-    toast.success('Notificación enviada al reportante', {
-      description: `Se ha enviado un mensaje interno a ${objeto.reportante_contacto} con tus datos de contacto.`
-    });
-    onClose();
+  const handleContact = async () => {
+    if (isEncontrado) {
+      try {
+        await reclamarObjeto(objeto.id);
+        toast.success('Objeto reclamado correctamente');
+        onClose();
+      } catch (error) {
+        toast.error(error.response?.data?.mensaje || 'No se pudo reclamar el objeto');
+      }
+    } else {
+      toast.success('Notificación enviada al reportante', {
+        description: `Se ha enviado un mensaje interno a ${objeto.reportante_contacto} con tus datos de contacto.`
+      });
+      onClose();
+    }
   };
 
   return (

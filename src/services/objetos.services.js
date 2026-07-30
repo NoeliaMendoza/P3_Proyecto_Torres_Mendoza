@@ -31,12 +31,17 @@ export const marcarComoEncontrado = async (id) => {
   return data;
 };
 
+export const reclamarObjeto = async (id) => {
+  const { data } = await api.post(`/objetos-perdidos/${id}/reclamar`);
+  return data;
+};
+
 export const crearObjeto = async (data) => {
   const payload = {
     titulo: data.nombre,
     descripcion: data.descripcion,
     tipo: data.tipo,
-    categoria: data.categoria === 'Utiles' ? 'Útiles Académicos' : data.categoria,
+    categoria: data.categoria,
     ubicacion: data.lugar,
     fecha_evento: data.fecha,
     informacion_contacto: data.reportante_contacto,
