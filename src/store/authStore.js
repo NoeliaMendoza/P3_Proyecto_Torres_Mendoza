@@ -33,7 +33,16 @@ export const useAuthStore = create(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
         contexto: state.contexto
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.token) {
+          localStorage.setItem('token', state.token);
+          if (state.usuario) localStorage.setItem('usuario', JSON.stringify(state.usuario));
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('usuario');
+        }
+      }
     }
   )
 );
