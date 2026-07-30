@@ -8,25 +8,17 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(cors());
 
-let ready = null;
-const ensureReady = async () => {
-  if (!ready) {
-    ready = (async () => {
-      await require('../server/database/migrate')();
+let migrationPromise = null;
+const runMigration = () => {
+  if (!migrationPromise) {
+    migrationPromise = require('../server/database/migrate')().then(() => {
       console.log('Migraciones completadas.');
-    })();
+    }).catch((e) => {
+      console.error('Migration error:', e);
+    });
   }
-  await ready;
 };
-
-app.use(async (req, res, next) => {
-  try {
-    await ensureReady();
-  } catch (e) {
-    console.error('Migration error:', e);
-  }
-  next();
-});
+runMigration();
 
 app.get('/api/health', async (_req, res) => {
   try {
