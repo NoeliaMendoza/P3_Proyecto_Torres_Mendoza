@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@heroui/react';
 import {
@@ -17,9 +17,12 @@ export const AuthActionPage = ({ action }) => {
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [loading, setLoading] = useState(false);
+  const verificationStarted = useRef(false);
 
   useEffect(() => {
     if (action !== 'verify') return;
+    if (verificationStarted.current) return;
+    verificationStarted.current = true;
     if (!token) {
       setStatus('error');
       setMessage('El enlace de verificación no contiene un token válido.');
