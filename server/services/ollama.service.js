@@ -37,8 +37,6 @@ const ollamaChat = async ({ messages, system }) => {
 };
 
 // ─── Modo Cloud (OpenAI / Groq / Together) ────────────────────────
-const OpenAI = require('openai');
-
 const providers = {
   openai: { baseURL: undefined, model: 'gpt-4o-mini' },
   groq: { baseURL: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile' },
@@ -49,13 +47,18 @@ const config = providers[AI_PROVIDER] || providers.openai;
 const cloudModel = process.env.AI_MODEL || config.model;
 const isCloud = AI_PROVIDER !== 'ollama' && AI_API_KEY.length > 0;
 
-const client = isCloud
-  ? new OpenAI({ apiKey: AI_API_KEY, baseURL: process.env.AI_BASE_URL || config.baseURL })
-  : null;
+let _client = null;
+const getClient = () => {
+  if (!_client) {
+    const OpenAI = require('openai');
+    _client = new OpenAI({ apiKey: AI_API_KEY, baseURL: process.env.AI_BASE_URL || config.baseURL });
+  }
+  return _client;
+};
 
 const cloudCheck = async () => {
   try {
-    const models = await client.models.list();
+    const models = await getClient().models.list();
     return models.data?.length > 0;
   } catch {
     return false;
@@ -63,7 +66,7 @@ const cloudCheck = async () => {
 };
 
 const cloudChat = async ({ messages, system }) => {
-  const completion = await client.chat.completions.create({
+  const completion = await getClient().chat.completions.create({
     model: cloudModel,
     messages: [
       { role: 'system', content: system },
