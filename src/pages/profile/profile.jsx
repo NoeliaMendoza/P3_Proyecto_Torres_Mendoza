@@ -127,7 +127,7 @@ export const ProfilePage = () => {
                   : 'bg-[#F4FAF7] text-[#52716B] hover:bg-[#E1F1E9]'
               }`}
             >
-              <HiTag className="w-4 h-4" /> Mis Publicaciones ({objetos.length})
+              <HiTag className="w-4 h-4" /> Mis Publicaciones ({objetos.filter((o) => o.id_reportante === usuario?.id).length})
             </button>
             <button
               onClick={() => setActiveTab('config')}
@@ -234,8 +234,11 @@ export const ProfilePage = () => {
           <h3 className="text-base font-extrabold text-[#123B38] font-heading border-b border-[#D8EAE2] pb-3">
             Publicaciones en Objetos Perdidos y Encontrados
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {objetos.map((o) => (
+          {(() => {
+            const misObjetos = objetos.filter((o) => o.id_reportante === usuario?.id);
+            if (misObjetos.length === 0) return <p className="text-xs text-[#52716B] font-semibold">No tienes publicaciones aún.</p>;
+            return <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {misObjetos.map((o) => (
               <div
                 key={o.id}
                 className="p-4 rounded-2xl bg-[#F4FAF7] border border-[#D8EAE2] flex items-center gap-4"
@@ -254,7 +257,8 @@ export const ProfilePage = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </div>;
+          })()}
         </div>
       )}
 
