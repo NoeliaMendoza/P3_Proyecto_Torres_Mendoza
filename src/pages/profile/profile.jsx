@@ -241,7 +241,7 @@ export const ProfilePage = () => {
                 className="p-4 rounded-2xl bg-[#F4FAF7] border border-[#D8EAE2] flex items-center gap-4"
               >
                 <img
-                  src={o.imagen}
+                  src={o.imagen || (Array.isArray(o.imagenes_url) && o.imagenes_url[0]) || 'https://placehold.co/600x400/036666/99E2B4?text=ESPEConnect'}
                   alt={o.nombre}
                   className="w-16 h-16 rounded-2xl object-cover border border-[#D8EAE2] shrink-0"
                 />

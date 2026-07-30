@@ -1,0 +1,11 @@
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://i.pinimg.com/736x/9f/3f/6a/9f3f6ad40120580c2363115116449c47.jpg'] WHERE id = 1;
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcScvET-MuLo8jQjCb9VkSrZaEhRGxgv7cOpVKX2gnv1ZMH9uGc3UiTIJ65s&s=10'] WHERE id = 2;
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://i.pinimg.com/1200x/f2/3d/84/f23d843f5192296bdedcdd15fd465a86.jpg'] WHERE id = 3;
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://i.pinimg.com/736x/cb/d6/d0/cbd6d054b80de10ae5417bd9c8512fc1.jpg'] WHERE id = 4;
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://i.pinimg.com/1200x/6a/18/93/6a189355a9791f607a6aa11d10ef6d57.jpg'] WHERE id = 5;
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://i.pinimg.com/1200x/47/a2/70/47a270504dfe4f3d103f4d22a906d5e6.jpg'] WHERE id = 6;
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://i.pinimg.com/736x/7d/5c/8c/7d5c8c72e0734ba63448a2bc67581f37.jpg'] WHERE id = 7;
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://i.pinimg.com/1200x/89/2d/fe/892dfe086f994adf8aae620cbc59ae04.jpg'] WHERE id = 8;
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80'] WHERE id = 9;
+UPDATE objetos_perdidos SET imagenes_url = ARRAY['https://i.pinimg.com/1200x/e6/9c/d4/e69cd4669c82157a89183ac0be2dbbfc.jpg'] WHERE id = 10;
+SELECT id, titulo, CASE WHEN imagenes_url IS NULL OR cardinality(imagenes_url)=0 THEN 'SIN IMAGEN' ELSE 'CON IMAGEN' END AS estado FROM objetos_perdidos ORDER BY id;

@@ -29,13 +29,13 @@ router.get('/categorias', authentication, async (req, res) => {
 
 router.post('/', authentication, async (req, res) => {
   try {
-    const { titulo, descripcion, id_categoria, tipo, ubicacion, fecha_evento, informacion_contacto } = req.body;
+    const { titulo, descripcion, id_categoria, tipo, ubicacion, fecha_evento, informacion_contacto, imagen } = req.body;
     if (!titulo || !descripcion || !tipo)
       return res.status(400).json({ mensaje: 'Título, descripción y tipo son requeridos.' });
     const r = await conexion.query(
-      `INSERT INTO objetos_perdidos (titulo, descripcion, id_categoria, tipo, ubicacion, fecha_evento, id_reportante, informacion_contacto)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [titulo, descripcion, id_categoria||null, tipo, ubicacion||null, fecha_evento||null, req.usuario.id, informacion_contacto||null]
+      `INSERT INTO objetos_perdidos (titulo, descripcion, id_categoria, tipo, ubicacion, fecha_evento, id_reportante, informacion_contacto, imagenes_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [titulo, descripcion, id_categoria||null, tipo, ubicacion||null, fecha_evento||null, req.usuario.id, informacion_contacto||null, imagen ? [imagen] : null]
     );
     res.status(201).json({ mensaje: 'Reporte creado correctamente.', objeto: r.rows[0] });
   } catch (error) { res.status(500).json({ mensaje: 'Error interno del servidor.' }); }
@@ -45,9 +45,10 @@ router.put('/:id', authentication, async (req, res) => {
   try {
     const r = await conexion.query(
       `UPDATE objetos_perdidos SET titulo=COALESCE($1,titulo), descripcion=COALESCE($2,descripcion),
-       id_categoria=COALESCE($3,id_categoria), estado=COALESCE($4,estado), updated_at=NOW()
-       WHERE id=$5 AND id_reportante=$6 RETURNING *`,
-      [req.body.titulo, req.body.descripcion, req.body.id_categoria, req.body.estado, req.params.id, req.usuario.id]
+       id_categoria=COALESCE($3,id_categoria), estado=COALESCE($4,estado),
+       imagenes_url=COALESCE($5,imagenes_url), updated_at=NOW()
+       WHERE id=$6 AND id_reportante=$7 RETURNING *`,
+      [req.body.titulo, req.body.descripcion, req.body.id_categoria, req.body.estado, req.body.imagen ? [req.body.imagen] : null, req.params.id, req.usuario.id]
     );
     if (r.rows.length === 0) return res.status(404).json({ mensaje: 'Objeto no encontrado o no autorizado.' });
     res.json({ mensaje: 'Reporte actualizado.', objeto: r.rows[0] });

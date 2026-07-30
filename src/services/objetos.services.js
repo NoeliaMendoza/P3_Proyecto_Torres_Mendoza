@@ -34,6 +34,7 @@ export const crearObjeto = async (data) => {
     ubicacion: data.lugar,
     fecha_evento: data.fecha,
     informacion_contacto: data.reportante_contacto,
+    imagen: data.imagen,
   };
   try {
     const response = await api.post('/objetos-perdidos', payload);

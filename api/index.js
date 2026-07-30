@@ -5,8 +5,28 @@ const conexion = require('../server/database/conexion');
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(cors());
+
+let ready = null;
+const ensureReady = async () => {
+  if (!ready) {
+    ready = (async () => {
+      await require('../server/database/migrate')();
+      console.log('Migraciones completadas.');
+    })();
+  }
+  await ready;
+};
+
+app.use(async (req, res, next) => {
+  try {
+    await ensureReady();
+  } catch (e) {
+    console.error('Migration error:', e);
+  }
+  next();
+});
 
 app.get('/api/health', async (_req, res) => {
   try {
@@ -27,18 +47,6 @@ app.use('/api/push', require('../server/routes/push.routes'));
 app.use('/api/ai', require('../server/routes/ai.routes'));
 app.use('/api/notificaciones', require('../server/routes/notificaciones.routes'));
 app.use('/api/matriculas', require('../server/routes/matriculas.routes'));
-
-const migrate = async () => {
-  try {
-    await require('../server/database/migrate')();
-    await require('../server/database/seed-demo-users')();
-    console.log('Migraciones y seed completados.');
-  } catch (error) {
-    console.error('Error en migraciones:', error);
-  }
-};
-
-migrate();
 
 if (process.env.VERCEL !== '1') {
   const PUERTO = process.env.PUERTO || 3000;

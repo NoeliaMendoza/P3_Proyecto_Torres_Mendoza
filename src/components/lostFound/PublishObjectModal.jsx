@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useState, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -8,7 +8,8 @@ import {
   HiMapPin, 
   HiCalendar, 
   HiCheckCircle,
-  HiArrowUpTray
+  HiArrowUpTray,
+  HiLink
 } from 'react-icons/hi2';
 import { toast } from 'sonner';
 import { crearObjeto } from '../../services/objetos.services';
@@ -16,7 +17,9 @@ import { useAuthStore } from '../../store/authStore';
 
 export const PublishObjectModal = ({ isOpen, onClose }) => {
   const usuario = useAuthStore((s) => s.usuario);
-  const [imagePreview, setImagePreview] = useState('https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=800&q=80');
+  const fileInputRef = useRef(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageUrl, setImageUrl] = useState('');
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
     defaultValues: {
@@ -32,6 +35,54 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const [imageMode, setImageMode] = useState('upload');
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const processFile = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo se permiten imágenes');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no debe superar los 5MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setImagePreview(ev.target.result);
+      setImageUrl('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e) => processFile(e.target.files?.[0]);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    processFile(e.dataTransfer?.files?.[0]);
+  }, []);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => setIsDragOver(false), []);
+
+  const handleUrlSubmit = () => {
+    if (!imageUrl.trim()) return;
+    setImagePreview(imageUrl.trim());
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    setImageUrl('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const onSubmit = async (data) => {
     try {
       const result = await crearObjeto({
@@ -45,6 +96,9 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
           : `El objeto "${data.nombre}" ha sido publicado correctamente en el portal.`
       });
       reset();
+      setImagePreview(null);
+      setImageUrl('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       onClose();
     } catch (err) {
       toast.error('Error al publicar el objeto', {
@@ -53,17 +107,9 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const sampleImages = [
-    { label: 'Mochila / Bag', url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Calculadora / Gadget', url: 'https://images.unsplash.com/photo-1632571401005-458e9d244591?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Documentos / Carnet', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Audífonos / Gadget', url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80' }
-  ];
-
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -71,15 +117,12 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
           onClick={onClose}
           className="fixed inset-0 bg-[#024E50]/70 backdrop-blur-xs"
         />
-
-        {/* Modal Window */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           className="relative bg-white rounded-[32px] shadow-2xl border border-[#D8EAE2] w-full max-w-xl overflow-hidden z-10 max-h-[90vh] flex flex-col"
         >
-          {/* Header */}
           <div className="bg-[#036666] p-6 text-white relative shrink-0">
             <button
               onClick={onClose}
@@ -97,9 +140,7 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
             </p>
           </div>
 
-          {/* Form Scrollable Content */}
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4 overflow-y-auto flex-1">
-            {/* Tipo (Radio Tabs) */}
             <div>
               <label className="block text-xs font-bold text-[#123B38] mb-1.5">
                 Tipo de Reporte
@@ -130,7 +171,6 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* Nombre del objeto */}
             <div>
               <label className="block text-xs font-bold text-[#123B38] mb-1.5">
                 Nombre del Objeto
@@ -146,7 +186,6 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
               )}
             </div>
 
-            {/* Categoría & Fecha */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-[#123B38] mb-1.5 flex items-center gap-1">
@@ -176,7 +215,6 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* Lugar */}
             <div>
               <label className="block text-xs font-bold text-[#123B38] mb-1.5 flex items-center gap-1">
                 <HiMapPin className="w-3.5 h-3.5 text-[#358F80]" /> Ubicación en el Campus
@@ -192,40 +230,118 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
               )}
             </div>
 
-            {/* Image selection simulation */}
+            {/* Image upload */}
             <div>
               <label className="block text-xs font-bold text-[#123B38] mb-1.5 flex items-center gap-1">
                 <HiPhoto className="w-3.5 h-3.5 text-[#358F80]" /> Imagen del Objeto
               </label>
-              <div className="flex items-center gap-3">
-                <img
-                  src={imagePreview}
-                  alt="Vista previa"
-                  className="w-16 h-16 rounded-2xl object-cover border border-[#D8EAE2] shrink-0"
-                />
-                <div className="flex-1 space-y-1">
-                  <p className="text-[11px] text-[#52716B] font-semibold">Selecciona una imagen de demostración:</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {sampleImages.map((img, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setImagePreview(img.url)}
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${
-                          imagePreview === img.url
-                            ? 'bg-[#358F80] text-white border-[#358F80]'
-                            : 'bg-[#F4FAF7] text-[#248277] border-[#D8EAE2] hover:bg-[#E1F1E9]'
-                        }`}
-                      >
-                        {img.label}
-                      </button>
-                    ))}
+
+              {imagePreview ? (
+                <div className="relative group rounded-2xl overflow-hidden bg-[#F4FAF7] border border-[#D8EAE2]">
+                  <img
+                    src={imagePreview}
+                    alt="Vista previa"
+                    className="w-full h-44 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="opacity-0 group-hover:opacity-100 px-4 py-2 rounded-full bg-white/90 text-rose-600 text-xs font-extrabold shadow-lg hover:bg-white transition-all flex items-center gap-1.5"
+                    >
+                      <HiXMark className="w-4 h-4" />
+                      Cambiar imagen
+                    </button>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="rounded-2xl border-2 border-dashed border-[#D8EAE2] bg-[#F4FAF7] overflow-hidden">
+                  <div className="flex border-b border-[#D8EAE2]">
+                    <button
+                      type="button"
+                      onClick={() => setImageMode('upload')}
+                      className={`flex-1 py-2 text-[11px] font-extrabold text-center transition-all ${
+                        imageMode === 'upload'
+                          ? 'bg-white text-[#248277] border-b-2 border-[#248277]'
+                          : 'bg-[#F4FAF7] text-[#6A8881] hover:bg-white'
+                      }`}
+                    >
+                      <HiArrowUpTray className="w-3.5 h-3.5 inline mr-1" />
+                      Subir imagen
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageMode('url')}
+                      className={`flex-1 py-2 text-[11px] font-extrabold text-center transition-all ${
+                        imageMode === 'url'
+                          ? 'bg-white text-[#248277] border-b-2 border-[#248277]'
+                          : 'bg-[#F4FAF7] text-[#6A8881] hover:bg-white'
+                      }`}
+                    >
+                      <HiLink className="w-3.5 h-3.5 inline mr-1" />
+                      Pegar URL
+                    </button>
+                  </div>
+
+                  {imageMode === 'upload' ? (
+                    <div
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${
+                        isDragOver
+                          ? 'bg-[#E1F1E9] border-[#248277]'
+                          : 'hover:bg-[#EAF6F0]'
+                      }`}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <div className="w-12 h-12 rounded-full bg-[#D8EAE2] flex items-center justify-center mb-3">
+                        <HiArrowUpTray className="w-6 h-6 text-[#248277]" />
+                      </div>
+                      <p className="text-xs font-bold text-[#248277]">
+                        {isDragOver ? 'Suelta la imagen aquí' : 'Haz clic o arrastra una imagen'}
+                      </p>
+                      <p className="text-[10px] text-[#6A8881] font-semibold mt-1">
+                        PNG, JPG o WEBP &middot; Máx. 5MB
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-4">
+                      <div className="flex items-center gap-2">
+                        <HiLink className="w-4 h-4 text-[#A0C4B8] shrink-0" />
+                        <input
+                          type="text"
+                          placeholder="https://ejemplo.com/imagen.jpg"
+                          value={imageUrl}
+                          onChange={(e) => setImageUrl(e.target.value)}
+                          onBlur={handleUrlSubmit}
+                          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlSubmit())}
+                          className="flex-1 px-3 py-2 bg-white border border-[#D8EAE2] rounded-xl text-xs font-semibold text-[#123B38] focus:outline-none focus:ring-2 focus:ring-[#358F80]/30 focus:border-[#358F80] placeholder-[#A0C4B8]"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleUrlSubmit}
+                          className="px-4 py-2 rounded-xl text-[11px] font-bold bg-[#248277] text-white hover:bg-[#14746F] transition-all"
+                        >
+                          Añadir
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-[#6A8881] font-semibold mt-2">
+                        Pega la URL de una imagen alojada en Imgur, Google Drive, Unsplash, etc.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Descripción */}
             <div>
               <label className="block text-xs font-bold text-[#123B38] mb-1.5">
                 Descripción Detallada
@@ -241,7 +357,6 @@ export const PublishObjectModal = ({ isOpen, onClose }) => {
               )}
             </div>
 
-            {/* Footer buttons */}
             <div className="pt-4 border-t border-[#D8EAE2] flex items-center justify-end gap-3 shrink-0">
               <button
                 type="button"
