@@ -112,7 +112,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensaje: 'Error interno del servidor.' });
+    res.status(500).json({ mensaje: 'Error interno del servidor.', detalle: error.message });
   }
 });
 
@@ -274,8 +274,8 @@ router.get('/me/contexto', async (req, res) => {
 
     res.json(contexto);
   } catch (error) {
-    console.error('Error en /me/contexto:', error);
-    res.status(500).json({ mensaje: 'Error al obtener contexto del usuario.' });
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error interno del servidor.', detalle: error.message });
   }
 });
 
